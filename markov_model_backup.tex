@@ -1,0 +1,337 @@
+\documentclass[11pt]{article}
+
+
+\usepackage{tikz}
+\usepackage{amsmath}
+
+\begin{document}
+
+\title{Applying the Hidden Markov Model to Labelling CTI Event Sequences }
+\author{Chris Davey}
+\date{Dec 2014}
+
+\maketitle
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Overview}
+
+The Markov Model provides a framework for the determination of state of the current set of observed evidence variables \cite{mai}. It models all potential states and the probability of transition into those states given the evidence observed so far. This summary illustrates the usage of the concept applied to the arrival of CTI events (computer telephony interface) in order to superimpose a higher level determination of state labels upon the low level sequence of events (the evidence variables) allowing a mapping between CTI event sequences and State labels to be defined by use of a Hidden Markov Model (HMM) as opposed to the hard coding of control flow within a programming language. This document provides a motivation for the technique and presents a summary of the Hidden Markov Model encoding, and provides an example of methods for training such a model.
+
+\section{Motivation}
+
+
+In writing procedural object oriented applications in an imperative language to deal with event streams issued from CTI systems, it has been common practice to encode the sequence of events as a series of imperative branching statements or as a deterministic state machine. These branching statements depend upon state data or object, which may be used to convey a model of the call state and are often intermixed with control statements or triggering of events which enact upon the state data, based upon hard coded assumptions about the CTI event stream. This method of writing a program encodes the interpretation of a time dependent input signal (the series of CTI events) as a series of sequential statements that describes variation in a static manner. These are the logical procedures written within the program that deal with the current state data and the action performed in relation to reacting to the current interpretation of the current CTI event.\\
+ 
+When faced with variation in arrival sequence of the CTI events due to the high load placed upon telephony systems under peak load, or performance testing. It is likely that CTI events will not necessarily arrive in the order previously encoded in the procedural sequences encoded in the program. The way to deal with this variation is to add further logical conditions to allow the program to encode the different variations in the order of CTI events, this may involve collecting events in a temporary buffer and delaying them until subsequences of dependent events have arrived, before the application can update the call state data based on the interpretation of the dependent event sequences. This adds additional complexity to the program, causing maintenance and potentially leaky abstraction in relation to the programs initial design and structural integrity.\\
+Such transitions between states have also been encoded as state machines, with transitions and explicit entry conditions for each state corresponding to the predetermined rules produced in the assumptions made about the sequence of CTI events. The Hidden Markov Model lends itself to the state machine representation, and is essentially a finite state machine with probabilities assigned to the transitions between states instead of hard coded entry conditions \cite{pc}. 
+
+\section{Concepts}
+
+This document proposes the use of a Hidden Markov Model that is trained on data sets of labelled CTI event sequences in order to provide a classifier that is capable of emitting "state" labels for time sequences of CTI event streams. Instead of encoding logical branching within the program to describe the relationship between an event stream and an abstracted call state, the HMM is trained to emit state labels in response to the incoming CTI events at each stage of the call. Specifically, the abstract call state is concerned with the modelling of call recording of the calling party (not the answering party). Additionally the answering party (a call centre agent) may potentially transfer the call amongst other call centre agents. The call recording state will need to be started, paused, stopped or restarted depending on the evidence provided by the incoming CTI stream. The abstract call recording states are illustrated below (note these do not reflect any specific implementation, but serve as an illustrative example only in the context of call recording for capturing audio in order to enrol a caller within a voice collection system). \\
+
+\usetikzlibrary{positioning}
+\begin{tikzpicture}[->, xscale=6,yscale=8,>=stealth, shorten >=1pt, auto, node distance=3cm, thick, draw=blue!100]
+\tikzstyle{v}=[circle,minimum size=1mm, draw, thick]
+\tikzstyle{bluen}=[v,draw=blue!75,fill=blue!20]
+\tikzstyle{redn}=[v,draw=red!75,fill=red!20]
+
+\node[bluen] (a) {$Initial$};
+\node[bluen] (b) [below=of a] {$OnCall$};
+\node[bluen] (c) [right=of b]{$OnHold$};
+\node[bluen] (d) [right=of c]{$Enrol$};
+\node[bluen] (e) [below=of b]{$Ended$};
+\node[bluen] (f) [below=of d]{$Consulted$};
+
+\path[every node/.style={font=\sffamily\small}]
+(a) edge node [left] {} (b)
+    edge [bend right] node {} (e)
+    (b) edge node [left] {} (c)
+        edge node[left] {} (e)
+        edge [bend left] node {} (d)
+        edge [left] node {} (f) 
+    (c) edge node[left] {} (e)
+        edge node[left] {} (f)
+    (d) edge node[left] {} (e)
+    (f) edge node[left] {} (e);
+    
+\end{tikzpicture}
+
+The above call recording states are for illustrative purposes, but demonstrate an example state space without the evidence variables for CTI events, these variables represent the non-observable state variables (labels). The additional evidence variables (combining CTI events and their associated data) are the observable variables that are time dependent and the assocations that define the resulting evidence/state space must be learnt from collected data. For example one such sequence may be.
+
+
+\usetikzlibrary{positioning}
+\begin{tikzpicture}[->, xscale=6,yscale=8,>=stealth, shorten >=1pt, auto, node distance=3cm, thick, draw=blue!100]
+\tikzstyle{v}=[circle,minimum size=1mm, draw, thick]
+\tikzstyle{bluen}=[v,draw=blue!75,fill=blue!20]
+\tikzstyle{redn}=[v,draw=red!75,fill=red!20]
+\tikzstyle{v}=[circle,minimum size=1mm, draw, thick]
+
+\node[redn] (x1) {$Ringing_{t=1}$};
+\node[redn] (x2) [below=of x1] {$Established_{t=2}$};
+\node[redn] (x3) [below=of x2] {$UserEvent=Start_{t=3}$};
+\node[bluen] (b1) [right=of x3] {$OnCall$};
+\node[redn] (x4) [below=of x3] {$t_4...t_{n-k}$};
+
+\path[every node/.style={font=\sffamily\small}]
+    (x1) edge node [left] {} (x2)
+    (x2) edge node [left] {} (x3)
+    (x3) edge node[left] {$emits$} (b1)
+    edge node[left] {} (x4);
+\end{tikzpicture}
+
+The diagram above illustrates that at each time $t$ an evidence variable (shown in red) is observed, and at points in the sequence a state variable is emitted (shown in blue) from the model (note those points where a state is not emitted we can call a "Null" state). The state variable identifies the current state of the call given the stream of sequences that have occured so far. The transitions between sequences represent two discrete conditional probability distributions The first relating each state variable $X$ to each of the other state variables $x$ and the second relating each state variable $X$ each evidence variable $e$ given the stream of previous events in time $1:t$, the next predicted state at time $t+k+1$ and prior states in time $t+k$ \cite{mai}.
+$$
+P(X_{t+k+1}|e_{1:t}) = \sum_{ x_{t+k} } P(X_{t+k+1} | x_{t+k}) P(x_{t+k}|e_{1:t}) 
+$$
+Hence the model in the discrete case consists of the state transition probability distribution. From our example the states consist of the set: $$\{Null, Initial,OnCall,OnHold, Enrol, Ended, Consulted\}$$
+Note the addition of the $Null$ state which represents a state that has no action associated with it, this state indicates that the model is waiting for further evidence before it can determine the next appropriate state (to allow the model to emit a state at every incoming CTI event). The state transition table would have the following structure.\\
+\\
+\begin{tabular}{|c|c|c|c|c|c|c|c|} 
+\hline
+$t+1 \sim t$ & Null & Initial & OnCall & OnHold & Enrol & Ended & Consulted \\
+\hline
+Null & & & & & & & \\
+\hline
+Initial & & & & & & & \\
+\hline
+OnCall & & & & & & & \\
+\hline
+OnHold & & & & & & & \\
+\hline
+Enrol & & & & & & & \\
+\hline 
+Ended & & & & & & & \\
+\hline
+Consulted & & & & & & & \\
+\hline 
+\end{tabular}
+\\
+\\
+And is essentially a tabular representation (an $M \times M$ matrix) of the graphical form presented earlier from this table we can determine the prior conditional distribution of $P(X_{t+1} | x_{t})$. Duda et al, refer to the transitions in this table as $a_{ij}$ \cite{pc}, the matrix in Bishop is termed $A$ \cite{mlp} so we have the matrix $A$.
+
+\begin{equation*}
+    \mathbf{A} = \left[
+    \begin{array}{cccc}
+    a_{11} & a_{12} & \ldots & a_{1j} \\
+    \vdots & \vdots & \vdots & \vdots \\
+    a_{i1} & a_{i2} & \ldots & a_{ij}
+   
+    \end{array}
+    \right]
+\end{equation*}
+
+
+The prediction process described briefly above will update the priors given the time $t$, the task of learning the state transition table will be to determine the priors from the training data.\\
+The second set of priors is the conditional distribution of the  evidence variable at time $t=1$ and the state variable. For the purpose of the example, the set of evidence variables are listed below, however in actual fact the evidence variables will be a much larger set, note that the evidence variables are a combination of event name, and some type attributes contained within the event, a larger model will also include the "party" that originates the event in terms of "party A", "party B", "party C" for instance. For the purpose of illustration let the CTI evidence variables be the following:
+\\
+\begin{itemize}
+\item Ringing(inbound)
+\item Dialing(consult)
+\item Establised()
+\item AttachedDataChanged()
+\item UserEvent(Started)
+\item UserEvent(Stopped)
+\item OffHook()
+\item Held()
+\item Retrieve()
+\end{itemize}
+
+Note that the set of evidence variables above are a simplified example, in practice, additional details such as parties may be encoded in the evidence variables.\\
+The resulting joint distribution would have the following structure.
+\\\\
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+$t=1$ & Null & Initial & OnCall & OnHold & Enrol & Ended & Consulted \\
+\hline
+Ringing(inbound) & & & & & & & \\
+\hline 
+Dialing(consult) & & & & & & & \\
+\hline 
+Establised() & & & & & & & \\
+\hline 
+AttachedDataChanged() & & & & & & & \\
+\hline
+UserEvent(Started) & & & & & & & \\
+\hline
+UserEvent(Stopped) & & & & & & & \\
+\hline
+OffHook() & & & & & & & \\
+\hline
+Held() & & & & & & & \\
+\hline
+Retrieve() & & & & & & & \\
+\hline
+\end{tabular}
+\\\\
+The format is an $N \times M$ matrix indicating the conditional distribution $P(x_{t=1} | e_{t=1})$ denoted as a matrix $B$ where $B_{ij} = P(x_i | e_j )$ at time $t$ the state $x_t$ will be emitted given the evidence (or visible) variable $e_j$. \cite{pc}
+\begin{equation*}
+    \mathbf{B} = \left[
+    \begin{array}{cccc}
+    b_{11} & b_{12} & \ldots & b_{1j} \\
+    \vdots & \vdots & \vdots & \vdots \\
+    b_{i1} & b_{i2} & \ldots & b_{ij}
+   
+    \end{array}
+    \right]
+\end{equation*}
+
+The task of the learning algorithm will be to learn these distributions over $t$. During the task of prediction, each table represents a prior distribution at time $t$, and is updated after evaluating the priors.
+
+
+\section{Learning}
+
+The goal of learning is to produce a hidden markov model containing the following components \cite{rab}.
+\begin{itemize}
+
+\item $N$ the total number of distinct states.
+
+\item $M$ the total number of distinct evidence variables.
+
+\item $\pi$ the prior state distribution of $P(x_i)$ at $t = 0$.
+
+\item $A$ the transition matrix where $a_{ij} = P(x_i|x_j)$ with $i = t, j=t+1$ and $1 \le i,j \le N$.
+
+\item $B$ the state evidence transition matrix where $b_{ij} = P(x_j|e_i)$ with $i = j = t$ and $1 \le i \le M, 1 \le j \le N$
+
+\end{itemize}
+
+The HMM is represented as the tuple below \cite{rab}.
+$$
+HMM = \lambda = (A, B, \pi)
+$$
+
+The matrices $A$, $B$ and the vector $\pi$ are constructed from the initial training data set. Then the learning algorithm is applied until convergence in order to build the updated model.
+
+The initial step in learning are the state transition distribution and evidence and state distributions as described above, however as $t$ increases the probability distribution becomes a distribution of $P(x_{t+k}|e_{1:t+k})$ for each of the evidence variables the prior needs to be computed in terms of the  ${1:t+k}$ sequences. \\
+The method of learning is performed through the ``forward backward algorithm'' which splits the learning process into two parts. Firstly the backward variable represents the probability that the model is in state $x_i(t)$ at time $t$ and will generate the remainder of the given target sequence from $t+1 \rightarrow T$ \cite{pc}. It can be described as \cite{rab}:
+$$
+\beta_i(t) = P(e_{t+1}, e_{t+2},...,e_T|x_i,\lambda)
+$$
+The conditionality includes the $\lambda$ model generated so far. $\beta$ is initialised as $\beta_T(i) = 1$ and is calculated as \cite{pc} 
+\begin{equation*}
+\beta_i(t) = \left\{
+    \begin{array}{rl}
+    0 &\text{if }x_i \neq x_0 \text{ and } t = T,\\
+    1 &\text{if }x_i = x_0 \text{ and } t = T,\\
+    \sum_j^N a_{ij}b_j(e_{t+1})\beta_j(t+1) & \text{otherwise}. 
+    \end{array}
+\right.
+\end{equation*}
+
+Given the recursive nature of the equation, dynamic programming is used to generate and cache results. The algorithm is evaluated tail recursively. The usage of $b_j(e_{t+1})$ represents the value from $B$ for $b_{ij}$ where $i$ is the index of the $e_{t+1}$ evidence variable in the current model $\lambda$.\\
+The second part of the algorithm is defined by the forward variable, which represents the probability that the model is in state $x_i$ given the sequence of evidence variables observed so far $e_{1:t}$ \cite{pc}.
+$$
+\alpha_j(t) = P(e_1,e_2,...,e_t, x_i | \lambda) \text{ \cite{rab}}
+$$
+The $\alpha$ equation defined as follows \cite{pc}.
+\begin{equation*}
+\alpha_j(t) = \left\{
+    \begin{array}{rl}
+    0 & t = 0 \text{ and } x_j \neq x_0,\\
+    1 & t = 0 \text{ and } x_j = x_0, \\
+    \left[ \sum_i^N \alpha_i(t-1)a_{ij}\right]b_j(e_t) & \text{otherwise} 
+    \end{array}
+\right.
+\end{equation*}
+The technique will also require a dynamic programming table to cache the recursive calls when computing $\alpha_i$. The term $b_j(e_t)$ represents the value from $B$ for $b_{ij}$ where $i$ is the index of the $e_t$ evidence variable from the current model $\lambda$.\\
+The process perform an update for the model $A$ iteractly by estimating the probability of transitioning from state $x_i$ to state $x_j$ at time $t$ and $t+1$ given the model and observations $V^{t+1} = e_1,e_2, e_3,...,e_{t+1}$ \cite{rab} the matrix $\Xi$ is used to contain the new estimates for the transitions between time $t$ and $t+1$.
+\begin{equation*}
+ \mathbf{\Xi} = \left[
+    \begin{array}{cccc}
+    \xi_{11} & \xi_{12} & \ldots & \xi_{1j} \\
+    \vdots & \vdots & \vdots & \vdots \\
+    \xi_{i1} & \xi_{i2} & \ldots & \xi_{ij}
+    \end{array}
+    \right]
+\end{equation*}
+The equation for $\xi_{ij}$ is given as follows \cite{rab}.
+$$
+\xi_{ij} = P(x_i(t), x_j(t+1) | V^{t+1}, \lambda) 
+$$\\
+$$
+= \frac{\alpha_i(t)b_j(e_{t+1})\beta_j(t+1)}{P(V^{t+1}|\lambda)} 
+$$\\
+$$
+= \frac{\alpha_i(t)b_j(e_{t+1})\beta_j(t+1)}{\sum_{i=1}^N \sum_{j=1}^N \alpha_i(t) a_{ij}b_j(e_{t+1})\beta_j(t+1)}
+$$
+The expected number of times that state $x_i$ transitions to state $x_j$ is determined by summing over the values of $\xi_{ij}$ \cite{pc} \cite{rab}.
+$$
+\gamma_i(t) = \sum_{j=1}^T \xi_t(i,j)
+$$
+And the total number of expected times a state $x_i$ is visited is given by summing over $\gamma_i$ for all time \cite{pc} \cite{rab}.
+$$
+\sum_{t=1}^T \gamma_i(t)
+$$
+The matrix $A$ can be updated with new estimates for the state transitions as follows \cite{pc}.
+$$
+\hat{A} = \hat{a}_{ij} = \frac{\gamma_i(t) }{\sum_{t=1}^T \gamma_i(t)}
+$$
+And the matrix $B$ can be updated with new estimates for the evidence variables and states by calculating the ratio between the frequency that a particular evidence variable $e_k$ is emitted and any evidence variable is emitted \cite{pc}.
+$$
+\hat{B} = \hat{b}_{ij} = \frac{\sum_{t=1, e_k}^T \gamma_k(t)}{\sum_{t=1}^T \gamma_i(t)}
+$$ 
+
+The learning process repeats until convergence, that is the changes in previous values of $a_{ij}$ and $b_{ij}$ decreases below a threshold $\theta$ \cite{pc}. 
+
+\section{Prediction}
+
+The product of the two conditional distributions at time $t+k$ predicts the state at $t+k+1$ as stated earlier using the following sum product.
+$$
+P(X_{t+k+1}|e_{1:t}) = \sum_{ x_{t+k} } P(X_{t+k+1} | x_{t+k}) P(x_{t+k}|e_{1:t}) 
+$$
+Similar to the learning process, prediction will iteratively generate estimates for both $\alpha$ and $\beta$ and use these to successively update the estimates for the model $A$. A new matrix 
+\begin{equation*}
+ \mathbf{\Gamma} = \left[
+    \begin{array}{cccc}
+    \gamma_{11} & \gamma_{12} & \ldots & \gamma_{1j} \\
+    \vdots & \vdots & \vdots & \vdots \\
+    \gamma_{i1} & \gamma_{i2} & \ldots & \gamma_{ij}
+    \end{array}
+    \right]
+\end{equation*}
+Is formed by using the estimates to determine the new probability of being in state $x_i$ at time $t$ given the sequence of evidence variable observations $V^t = e_1,e_2,...,e_t$ and the current model $\lambda$ \cite{rab}.
+$$
+\gamma_i(t) = P(x_t | V^t, \lambda)
+$$
+The equation to generate $\gamma_i$ is given in \cite{rab} and \cite{pc} as follows.
+$$
+\gamma_i(t) = \frac{\alpha_i(t)\beta_j(t)}{P(x_t | V^t, \lambda)} = \frac{\alpha_i(t)\beta_j(t)}{\sum_{i=1}^N \alpha_j(t)\beta_i(t)}
+$$
+
+
+
+\section{Evaluation} 
+
+TODO: talk about model evaluation using test data and measurement of performance.
+
+
+\section{Related Methods}
+
+TODO: talk about relation to the finite state machine, reinforcement learning as a potential means of dynamically learning the policy (it shares a similar structure as the $\alpha$ and $\beta$  but performs updates in place over time), there are also other models (eg RNN) which can be applied here.
+         
+\section{Example Implementation}
+
+TODO: implementation
+
+\newpage
+
+\begin{thebibliography}{99}
+
+\bibitem{mai} Norvig, Peter. Russell, Stuart. (2003) $Artificial\ Intelligence\ A\ Modern\ Approach.\ Second\ Edition.$ USA: Pearson Education, Inc. pp537-583, 724-733.
+\bibitem{dm} Han, Jiawei. Kamber, Micheline. (2006) $Data\ Mining:\ Concepts\ and\ Techniques.\ Second\ Edition.$ USA: Morgan Kaufman Publishers. pp518-526. 
+\bibitem{mlp} Bishop, Christopher M. (2006) $Pattern\ Recognition\ and\ Machine\ Learning$ USA: Springer Science + Business Media, LLC. pp607-635.
+
+\bibitem{pc} Duda, Richard O. Hart, Peter E. Stork, David G. (2001) $Pattern\ Classification.\ Second\ Edition.$ Canada: Wiley and Sons Inc. pp128-139.
+
+\bibitem{rab} Rabiner, Lawrence R. (1989) ``A Tutorial on Hidden Markov Models and Seleted Applications in Speech Recognition''. USA: Proceedings of the IEEE, VOL 77, NO.2 pp257-286
+
+\end{thebibliography}
+ 
+
+
+\end{document}

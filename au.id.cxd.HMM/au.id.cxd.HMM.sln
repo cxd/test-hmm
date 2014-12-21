@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "au.id.cxd.HMM", "au.id.cxd.HMM\au.id.cxd.HMM.fsproj", "{5B73D69F-1D78-4AD3-B797-15D6CB16986B}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "au.id.cxd.HMMTestConsole", "au.id.cxd.HMMTestConsole\au.id.cxd.HMMTestConsole.fsproj", "{D7B9B5AA-E67D-470D-97D1-1E7226524FDC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B73D69F-1D78-4AD3-B797-15D6CB16986B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B73D69F-1D78-4AD3-B797-15D6CB16986B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B73D69F-1D78-4AD3-B797-15D6CB16986B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B73D69F-1D78-4AD3-B797-15D6CB16986B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7B9B5AA-E67D-470D-97D1-1E7226524FDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7B9B5AA-E67D-470D-97D1-1E7226524FDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7B9B5AA-E67D-470D-97D1-1E7226524FDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7B9B5AA-E67D-470D-97D1-1E7226524FDC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = au.id.cxd.HMMTestConsole\au.id.cxd.HMMTestConsole.fsproj
+	EndGlobalSection
+EndGlobal

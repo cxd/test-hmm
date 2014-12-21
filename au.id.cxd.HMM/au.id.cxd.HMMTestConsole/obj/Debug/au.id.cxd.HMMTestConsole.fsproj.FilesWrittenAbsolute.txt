@@ -1,0 +1,10 @@
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/obj/Debug/.NETFramework,Version=v4.0.AssemblyAttribute.fs
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/bin/Debug/MathNet.Numerics.dll
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/bin/Debug/MathNet.Numerics.Data.Text.dll
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/bin/Debug/au.id.cxd.HMM.dll
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/bin/Debug/au.id.cxd.HMM.dll.mdb
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/bin/Debug/au.id.cxd.HMMTestConsole.exe.mdb
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/bin/Debug/au.id.cxd.HMMTestConsole.exe
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/obj/Debug/au.id.cxd.HMMTestConsole.exe
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/obj/Debug/au.id.cxd.HMMTestConsole.exe.mdb
+/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/obj/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.fs
