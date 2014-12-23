@@ -65,6 +65,10 @@ module HiddenMarkovModel =
             // compute new probabilities for evidence var at vk, at time t and update the row t in matrix accum
             (*
             \alpha_j(t) = b_{jk}v(t)\sum_{i=1}^c \alpha_i(t-1)a_{ij}
+
+            vk = current evidence variable in V
+            t = index of state at time t
+
             *)
             let inner (vk:int) (t:int) (accum:Matrix<float>):Matrix<float> =
                 //Console.WriteLine("Accum: {0}", accum)
@@ -72,15 +76,19 @@ module HiddenMarkovModel =
                 let alpha2 = cache (t-1) (fun () -> alphaInner (t - 1) pi A B V accum)
                 let totals = DenseMatrix.init accum.RowCount accum.ColumnCount (
                                     fun i j ->
-                                        alpha2.[i, t - 1] * A.[t-1, j] * B.[vk, t])
-                let total = totals.RowSums()
+                                        alpha2.[i, t - 1] * A.[t-1, j] )
+                
+                let total = totals.ColumnSums() * B.[vk, t]
                 // scaling coeff
-                let c = total.[vk]
+                (*
+                c_{t+1} = \sum_{i=1}^N \hat{\alpha_t|(i) a_{ij} b_j(O_{t+1})
+                *)
+                let c = total.Sum()
                 match c = 0.0 with
                 | false -> 
                     //Console.WriteLine("Set Row: {0} Dim: [{1}, {2}]", vk, accum.RowCount, accum.ColumnCount)
                     //Console.WriteLine("Row Data: {0}", total/c)
-                    accum.SetRow(vk, accum.Row(vk) / c)
+                    accum.SetRow(vk, total / c)
                     accum
                 | true -> accum
 
@@ -135,6 +143,8 @@ module HiddenMarkovModel =
                 map.Add(i, methodFn())
                 map.[i]
 
+        let alpha0 = alpha T pi A B stateCount evidenceCount V
+
         let rec betaInner (T:int) (t:int) (pi:float list) (A:Matrix<float>) (B:Matrix<float>) (V:int list) (accum:Matrix<float>) =
             // perform the calculation 
             (*
@@ -144,15 +154,21 @@ module HiddenMarkovModel =
             let inner (vk:int) (t:int) (accum:Matrix<float>):Matrix<float> =
                 let beta2 = cache (t+1) (fun () -> betaInner T (t + 1) pi A B V accum)
                 // alpha2.[i, t - 1] * A.[t-1, j] * B.[vk, t]
+                // calculate the scaling factor D_t = \prod_{\t=1}^T c_t
+
+                let alphaCol = alpha0.Column(t)
+                let d = Array.reduce (fun a b -> a+b) (alphaCol.ToArray())
+
+
+                // \beta_i(t) = \sum_{j=1}^C \beta_j(t+1)a_{ij}b_{jk}v(t+1)
                 let totals = DenseMatrix.init accum.RowCount accum.ColumnCount (
                                     fun i j ->
                                         beta2.[i, t + 1] * A.[t, j] * B.[vk, t + 1]) 
-                let total = totals.RowSums()
+                let total = totals.ColumnSums()
                 // scaling coefficient
-                let c = total.[vk]
-                match c = 0.0 with
+                match d = 0.0 with
                 | false ->
-                    accum.SetRow(vk, accum.Row(vk) / c)
+                    accum.SetRow(vk, total / d)
                     accum
                 | true -> accum
             
@@ -219,24 +235,26 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
         let T = (List.length model.states) - 1
         let stateCount = List.length model.states
         let evidenceCount = List.length model.evidence
-        let alpha = alpha T pi A B stateCount evidenceCount V
-        let beta = beta T pi A B stateCount evidenceCount V
+        let alphaM = alpha T pi A B stateCount evidenceCount V
+        let betaM = beta T pi A B stateCount evidenceCount V
 
         (* calculate the gamma function at state i in time t *)
-        let gammaFn i t =
-            let num = alpha.[t, i] * beta.[t, i]
-            // all states at time T
-            let denomA = alpha.Row(t).ToArray()
-            let denomB = beta.Row(t).ToArray()
-            let denom = Array.zip denomA denomB 
-                        |> Array.map (fun (a, b) -> a*b)
-                        |> Array.sum
-            num / denom 
+        let gammaFn j t t_sub1 =
+            let total = List.fold(fun n i ->
+                                n + alphaM.[t_sub1, i] * A.[i, j]    
+                                ) 0.0 [0..(A.RowCount-1)]
+            let num = B.[t,j] * total
+            //let alphaCol = alphaM.Column(i)
+            //let d = Array.reduce (fun a b -> a+b) (alphaCol.ToArray())
+            let d = alphaM.RowSums().Sum()
+            num / d 
 
         // find q_t = argmax_{1 \le j \le N} (gamma_j), 1 \le t \le T
         // that is the argmax of state j at evidence time T where T is the index of V
-        List.map (fun t -> 
-                    let row = List.map (fun i -> gammaFn i t) [0..(A.ColumnCount-1)]
+        List.map (fun v -> 
+                    let t = V.[v]
+                    let t_sub1 = V.[v-1]
+                    let row = List.map (fun j -> gammaFn j t t_sub1) [0..(A.ColumnCount-1)]
                     Console.WriteLine("Time: {0} Row: {1}", t, List.fold(fun (sb:StringBuilder) i -> sb.Append(i.ToString()).Append(" ")) (new StringBuilder()) row)
                     let max = Double.MinValue
                     let (max, index, searchIdx, flag) = 
@@ -248,7 +266,7 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
                                 ) (max, 0, 0, false) row 
                     // map the pairs to a set of states
                     { prob = max; state = model.states.[index]; evidence = model.evidence.[t]; t = t; success = flag; } 
-                    ) V
+                    ) [1..((List.length V)-1)]
 
     (* 
     the training method makes use of the forward backward

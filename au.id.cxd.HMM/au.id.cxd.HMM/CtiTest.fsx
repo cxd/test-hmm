@@ -22,23 +22,10 @@ let data = Reader.readSequences fInfo
 let states = Reader.readStates data
 let evidenceVars = Reader.readEvidenceVars data
 
-let test = Estimation.countStateFreq data states
 let pi = Estimation.statePriors data states
-// double check pi sums to 1
-let test1 = List.sum pi
-
-states
-let T = Estimation.countTransitions data states
 let A = Estimation.stateTransitions data states
-// should sum to 1.
-let test2 = A.RowSums().Sum() 
-
 // TODO: estimate sequence transition frequencies.
 let endSequences = Estimation.uniqueSequences data "Ended"
-
-
-let test3 = List.head endSequences
-// [string list list] list - a list of subsequences
 let subSeqs = Estimation.allSubsequences data endSequences
 
 let Bk = [Estimation.avgPriorEvidences subSeqs evidenceVars states]
@@ -62,18 +49,8 @@ let inputModel = {
 
 // let model = HiddenMarkovModel.train inputModel
 
-let testSeq = test3 |> List.toSeq |> Seq.take ((List.length test3) - 1) |> Seq.toList
-let testIdx = HiddenMarkovModel.indices testSeq evidenceVars
-let Barray = List.toArray Bk
 let stateCount = List.length states
 let evidenceCount = List.length evidenceVars
-
-let alpha1 = HiddenMarkovModel.alpha ((List.length states)-1) pi A Barray.[0] stateCount evidenceCount testIdx
-
-let testAlpha1 = alpha1.RowSums().Sum();;
-
-let beta1 = HiddenMarkovModel.beta ((List.length states)-1) pi A Barray.[0] stateCount evidenceCount testIdx
-let testBeta1 = beta1.RowSums().Sum();;
 
 // endSequences
 // test training on the end sequences
@@ -82,23 +59,11 @@ let testBeta1 = beta1.RowSums().Sum();;
 
 let model = HiddenMarkovModel.train inputModel data 0.1 500
 
-let testFile = "/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/data/testmodel.bin"
-let saveFlag = HiddenMarkovModel.writeToFile model (new FileInfo(testFile))
-let (readModel:Option<Model>) = HiddenMarkovModel.readFromFile (new FileInfo(testFile))
-
-// next steps prediction and decoding methods for HMM
-// note testSeq contains only evidence variables
-
-
-let prediction = 
-    Option.map (fun model -> 
-                HiddenMarkovModel.predict model ["Released"]) 
-            readModel
-
 
 let test4 = ["Ringing(inbound)";]
 let pred2 = HiddenMarkovModel.predict model test4
-let test5 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook"];
+
+let test5 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Dialing(Consult)"];
 HiddenMarkovModel.predict model test5
 
 let test6 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Held";];
@@ -112,3 +77,4 @@ HiddenMarkovModel.predict model test8
 
 let test9 = ["Released";];
 HiddenMarkovModel.predict model test9
+

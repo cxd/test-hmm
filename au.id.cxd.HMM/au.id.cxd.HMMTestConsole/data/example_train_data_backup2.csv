@@ -3,31 +3,25 @@
 # lines beginning with # are ignored.
 # Note also every sequence that consists of just 1 evidence variable and 1 outcome represents a start state
 # Also during training the "End" state label needs to be identified as a special state. 
-Ringing(inbound),OnCall
+Ringing(inbound),AttachedDataChanged,OnCall
 Ringing(inbound),AttachedDataChanged,OffHook,OnCall
+Ringing(inbound),UserEvent(Start),OnCall
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OnCall
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall
 Ringing(inbound),AttachedDataChanged,AttachedDataChanged,OnCall
 Ringing(inbound),AttachedDataChanged,AttachedDataChanged,OffHook,OnCall
-Established,OnCall
-#
-# audio started events
-#
-Ringing(inbound),UserEvent(Start),Started
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),Paused
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),Started
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall,AttachDataChanged,OnCall
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall,AttachDataChanged,Held,UserEvent(Stop),Paused
+Ringing(inbound),AttachedDataChanged,UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall
 #
 # Held sequences
 #
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,OnHold
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall,AttachDataChanged,Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachedDataChanged,Held,OnHold
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachedDataChanged,AttachedDataChanged,Held,OnHold
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,UserEvent(Stop),OnHold
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,Held,OnHold
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,AttachedDataChanged,Held,OnHold
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,AttachedDataChanged,AttachedDataChanged,Held,OnHold
-Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,AttachDataChanged,Held,UserEvent(Stop),OnHold
 #
 # Consult sequences
 #
@@ -38,4 +32,4 @@ Dialing(Consult),Consult
 # End sequences
 #
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,UserEvent(Stop),Dialing(Consult),UserEvent(Stop),UserEvent(Start),Released,Ended
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Released,Ended
+Released,Ended

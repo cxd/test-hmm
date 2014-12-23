@@ -59,6 +59,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="RainExample.fsx" />
+    <None Include="CtiTest.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
