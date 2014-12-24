@@ -1,0 +1,15 @@
+﻿# The last column in each line represents the state label.
+# evidence variables are those items appearing in each column before the last column.
+# lines beginning with # are ignored.
+# Note also every sequence that consists of just 1 evidence variable and 1 outcome represents a start state
+# Also during training the "End" state label needs to be identified as a special state. 
+Ringing(inbound),OnCall
+Ringing(inbound),AttachedDataChanged,OffHook,OnCall
+Ringing(inbound),AttachedDataChanged,AttachedDataChanged,OnCall
+Ringing(inbound),AttachedDataChanged,AttachedDataChanged,OffHook,OnCall
+Ringing(inbound),AttachedDataChanged,AttachedDataChanged,OffHook,Established,OnCall
+UserEvent(Started),None
+UserEvent(Stopped),None
+Released,None
+Held,None
+Dialing(Consult),None

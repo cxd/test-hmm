@@ -1,0 +1,12 @@
+﻿#
+# Consult sequences
+#
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,UserEvent(Stop),Dialing(Consult),Consult
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,UserEvent(Stop),Dialing(Consult),Consult
+Dialing(Consult),Consult
+Held,OnHold
+Ringing(Inbound),None
+Released,None
+Held,None
+UserEvent(Started),None
+UserEvent(Stopped),None

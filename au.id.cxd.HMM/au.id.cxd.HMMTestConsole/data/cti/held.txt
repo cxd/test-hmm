@@ -1,0 +1,15 @@
+﻿#
+# Held sequences
+#
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall,AttachDataChanged,Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachedDataChanged,AttachedDataChanged,Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,AttachedDataChanged,Held,OnHold
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,AttachedDataChanged,AttachedDataChanged,Held,OnHold
+Held,OnHold
+Ringing(Inbound),None
+Released,None
+Held,None
+Dialing(Consult),None

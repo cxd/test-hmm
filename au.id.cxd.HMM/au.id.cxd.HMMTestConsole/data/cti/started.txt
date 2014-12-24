@@ -1,0 +1,14 @@
+﻿#
+# audio started events
+#
+Ringing(inbound),UserEvent(Start),Started
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),None
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),Started
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,None
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall,AttachDataChanged,None
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,OnCall,AttachDataChanged,Held,UserEvent(Stop),None
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,UserEvent(Stop),Dialing(Consult),UserEvent(Start),Started
+Ringing(Inbound),None
+Released,None
+Held,None
+Dialing(Consult),None

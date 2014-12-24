@@ -1,0 +1,10 @@
+﻿#
+# End sequences
+#
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,UserEvent(Stop),Dialing(Consult),UserEvent(Stop),UserEvent(Start),Released,Ended
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Released,Ended
+Held,OnHold
+Ringing(Inbound),None
+Held,None
+UserEvent(Started),None
+UserEvent(Stopped),None
