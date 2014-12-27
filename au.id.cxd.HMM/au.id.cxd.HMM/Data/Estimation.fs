@@ -265,7 +265,7 @@ module Estimation =
         let termArr = List.toArray terms
         let mat = DenseMatrix.init n m (fun i j -> 
             // term is i, state is j P(e_i | x_j)
-            let (freq, totalFreq) = countTermAtEndOfState data termArr.[i] stateArr.[j]
+            let (freq, totalFreq) = countTermInState data termArr.[i] stateArr.[j]
             freq / totalFreq
             )
         mat.NormalizeRows(1.0)
@@ -331,8 +331,9 @@ module Estimation =
         
         let B = DenseMatrix.init n m (fun i j -> 0.0)
         let V = DenseVector.init n (fun i -> 0.0)
+
         let (V1, B1) = 
-            List.fold (fun (V, B) data -> 
+            List.fold (fun (V, B:Matrix<float>) data -> 
 
                 let (totalVec, mat) = innerPriorEvidence data terms states
                 Console.WriteLine("Totals:{0}{1}", Environment.NewLine, totalVec)
@@ -346,3 +347,25 @@ module Estimation =
         (DenseMatrix.init n m (fun i j -> 
                                 let t = V1.[i]
                                 B1.[i,j]/t)).NormalizeRows(1.0)
+
+
+ (* 
+     calculate the prior evidences for all data sets
+        assume each sample is independently and identically distributed
+        return the average prior evidences
+     *)
+
+    let jointPriorEvidences (dataSet:string list list list) (terms:string list) (states:string list) =
+        let m = List.length states
+        let n = List.length terms
+            
+        let BList = priorEvidences dataSet terms states
+
+        let B = DenseMatrix.init n m (
+                    fun i j ->
+                        let b = List.fold (
+                                    fun p (Bk:Matrix<float>) ->
+                                        p + Bk.[i,j]) 1.0 BList
+                        b
+                )
+        B.NormalizeRows(1.0)

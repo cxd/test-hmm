@@ -53,13 +53,17 @@
     <Compile Include="Script.fsx" />
     <Compile Include="Data\Reader.fs" />
     <Compile Include="Data\Estimation.fs" />
+    <Compile Include="TestCtiWords.fsx" />
+    <Compile Include="Model\Log_HiddenMarkovModel.fs" />
     <Compile Include="Model\HiddenMarkovModel.fs" />
+    <Compile Include="Model\HiddenMarkovModel_backup.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="RainExample.fsx" />
     <None Include="CtiTest.fsx" />
+    <None Include="RainExample2.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />

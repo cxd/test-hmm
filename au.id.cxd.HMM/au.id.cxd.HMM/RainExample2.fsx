@@ -18,22 +18,35 @@ open MathNet.Numerics.LinearAlgebra
 let data = 
     [["noumbrella"; "dry"];
      ["noumbrella"; "noumbrella"; "dry"];
-     ["noumbrella"; "noumbrella"; "final"; "end"];
      ["noumbrella"; "noumbrella"; "noumbrella"; "dry"];
-     ["noumbrella"; "noumbrella"; "noumbrella"; "final"; "end"];
+     ["noumbrella"; "umbrella"; "noumbrella"; "dry"];
+     ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "dry"];
+
 
      ["noumbrella"; "umbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "umbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "rain"];
-     ["noumbrella"; "umbrella"; "final"; "end"];
 
      ["umbrella"; "rain"];
      ["umbrella"; "umbrella"; "rain"];
-     ["umbrella"; "umbrella"; "final"; "end"];
      ["umbrella"; "umbrella"; "umbrella"; "rain"];
-     ["umbrella"; "umbrella"; "umbrella"; "final"; "end"];
+    
+
+     ["absent"; "storm"];
+     ["umbrella"; "absent"; "storm"];
+     ["absent"; "absent"; "absent"; "storm"];
+    
+     ["noumbrella"; "absent"; "storm"];
+     ["noumbrella"; "absent"; "noumbrella"; "rain"];
+     ["noumbrella"; "absent"; "noumbrella"; "absent"; "storm"];
+     ["noumbrella"; "absent"; "absent"; "absent"; "umbrella"; "rain"];
+     ["noumbrella"; "umbrella"; "absent"; "absent"; "storm"];
+     ["noumbrella"; "absent"; "absent"; "absent"; "storm"];
+     ["absent"; "absent"; "absent"; "absent"; "storm"];
+ 
+
      ]
 
 let states = Reader.readStates data
@@ -45,14 +58,11 @@ let pi = Estimation.statePriors data states
 let T = Estimation.countTransitions data states
 let A = Estimation.stateTransitions data states
 
-// estimate sequence transition frequencies.
-let endSequences = Estimation.uniqueSequences data "end"
-
-let test3 = List.head endSequences
 // [string list list] list - a list of subsequences
 let subSeqs = Estimation.allSubsequences data data
 
-let Bk = Estimation.avgPriorEvidences subSeqs evidenceVars states
+//let Bk = Estimation.avgPriorEvidences subSeqs evidenceVars states
+let Bk = Estimation.jointPriorEvidences subSeqs evidenceVars states
 
 
 let inputModel = {
@@ -63,19 +73,8 @@ let inputModel = {
     evidence = evidenceVars;
     } 
 
-let endSequences3 = [["noumbrella"; "dry";];
-                     ["umbrella"; "rain";];]
 
-let stateCount = 3
-let evidenceCount = 3
-
-let alpha1 = HiddenMarkovModel.alpha ((List.length states)-1) pi A Bk stateCount evidenceCount [0;1;1;1;]
-
-let beta1 = HiddenMarkovModel.beta (stateCount - 1) pi A Bk stateCount evidenceCount [0;1;1;1;]
-
-//let alpha2 = HiddenMarkovModel.alpha ((List.length states)-1) pi A Bk.[0] stateCount evidenceCount [0;]
-
-let model = HiddenMarkovModel.train inputModel data 0.0001 100
+let model = HiddenMarkovModel.train inputModel data 0.0001 10
 
 
 let predict = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
@@ -83,7 +82,13 @@ let predict = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "umbrel
 let predict2 = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella";]
 
 
-let predict3 = HiddenMarkovModel.predict model ["umbrella"; ]
+let predict3 = HiddenMarkovModel.predict model ["umbrella"; "absent"; "absent"]
 
 
-let predict4 = HiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; ]
+let predict4 = HiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; "absent";]
+
+let predict5 = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella"; "absent";]
+
+
+let predict6 = HiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; "noumbrella"; "noumbrella"]
+

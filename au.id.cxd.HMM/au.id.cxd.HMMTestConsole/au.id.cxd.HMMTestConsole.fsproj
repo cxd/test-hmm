@@ -63,8 +63,15 @@
     <None Include="data\example_train_data.csv" />
     <None Include="data\example_train_data_backup.csv" />
     <None Include="data\example_train_data_backup2.csv" />
+    <None Include="data\cti\consult.txt" />
+    <None Include="data\cti\held.txt" />
+    <None Include="data\cti\oncall.txt" />
+    <None Include="data\cti\paused.txt" />
+    <None Include="data\cti\released.txt" />
+    <None Include="data\cti\started.txt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
+    <Folder Include="data\cti\" />
   </ItemGroup>
 </Project>

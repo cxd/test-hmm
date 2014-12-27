@@ -8,8 +8,8 @@ Ringing(inbound),AttachedDataChanged,OffHook,OnCall
 Ringing(inbound),AttachedDataChanged,AttachedDataChanged,OnCall
 Ringing(inbound),AttachedDataChanged,AttachedDataChanged,OffHook,OnCall
 Ringing(inbound),AttachedDataChanged,AttachedDataChanged,OffHook,Established,OnCall
-UserEvent(Started),None
-UserEvent(Stopped),None
+UserEvent(Start),None
+UserEvent(Stop),None
 Released,None
 Held,None
 Dialing(Consult),None

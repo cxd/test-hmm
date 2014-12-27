@@ -17,6 +17,7 @@ open MathNet.Numerics.LinearAlgebra
 
 
 let testData = "/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/data/example_train_data.csv"
+
 let fInfo = new FileInfo(testData)
 let data = Reader.readSequences fInfo
 let states = Reader.readStates data
@@ -25,10 +26,11 @@ let evidenceVars = Reader.readEvidenceVars data
 let pi = Estimation.statePriors data states
 let A = Estimation.stateTransitions data states
 // TODO: estimate sequence transition frequencies.
-let endSequences = Estimation.uniqueSequences data "Ended"
-let subSeqs = Estimation.allSubsequences data endSequences
+//let endSequences = Estimation.uniqueSequences data "Ended"
+let subSeqs = Estimation.allSubsequences data data
 
 let Bk = [Estimation.avgPriorEvidences subSeqs evidenceVars states]
+//let Bk = [Estimation.jointPriorEvidences subSeqs evidenceVars states]
 
 //let Bk = Estimation.priorEvidences subSeqs evidenceVars states
 
@@ -57,24 +59,18 @@ let evidenceCount = List.length evidenceVars
 // theta = 0.05
 // max epochs = 10
 
-let model = HiddenMarkovModel.train inputModel data 0.1 500
-
+let model = HiddenMarkovModel.train inputModel data 0.00001 10
 
 let test4 = ["Ringing(inbound)";]
 let pred2 = HiddenMarkovModel.predict model test4
 
-let test5 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Dialing(Consult)"];
+let test5 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Held";"Dialing(Consult)"];
 HiddenMarkovModel.predict model test5
 
 let test6 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Held";];
 HiddenMarkovModel.predict model test6
-                    
-let test7 = ["Established";"Held";];
+
+let test7 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Held";"Released";];
 HiddenMarkovModel.predict model test7
-
-let test8 = ["Held";];
-HiddenMarkovModel.predict model test8
-
-let test9 = ["Released";];
-HiddenMarkovModel.predict model test9
+     
 
