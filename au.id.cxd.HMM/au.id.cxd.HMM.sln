@@ -20,7 +20,4 @@ Global
 		{D7B9B5AA-E67D-470D-97D1-1E7226524FDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7B9B5AA-E67D-470D-97D1-1E7226524FDC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = au.id.cxd.HMMTestConsole\au.id.cxd.HMMTestConsole.fsproj
-	EndGlobalSection
 EndGlobal

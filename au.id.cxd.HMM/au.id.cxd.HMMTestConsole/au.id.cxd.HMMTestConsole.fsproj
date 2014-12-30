@@ -53,12 +53,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
-    <ProjectReference Include="..\au.id.cxd.HMM\au.id.cxd.HMM.fsproj">
-      <Project>{5B73D69F-1D78-4AD3-B797-15D6CB16986B}</Project>
-      <Name>au.id.cxd.HMM</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
     <None Include="data\example_train_data.csv" />
     <None Include="data\example_train_data_backup.csv" />
@@ -73,5 +67,11 @@
   <ItemGroup>
     <Folder Include="data\" />
     <Folder Include="data\cti\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\au.id.cxd.HMM\au.id.cxd.HMM.fsproj">
+      <Project>{5B73D69F-1D78-4AD3-B797-15D6CB16986B}</Project>
+      <Name>au.id.cxd.HMM</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

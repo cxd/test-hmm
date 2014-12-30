@@ -6,6 +6,7 @@ open au.id.cxd.HMM
 open System
 open System.IO
 open au.id.cxd.HMM.HiddenMarkovModel
+open au.id.cxd.HMM.DataTypes
 open System.Collections.Generic
 open MathNet.Numerics
 open MathNet.Numerics.LinearAlgebra

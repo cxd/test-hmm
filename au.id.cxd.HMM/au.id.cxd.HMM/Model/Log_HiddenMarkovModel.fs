@@ -1,4 +1,4 @@
-﻿namespace au.id.cxd.HMM
+﻿namespace au.id.cxd.HMM.Log
 
 open System
 open System.IO
@@ -8,41 +8,10 @@ open MathNet.Numerics
 open MathNet.Numerics.LinearAlgebra
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Formatters.Binary
+open au.id.cxd.HMM.DataTypes
 
 module HiddenMarkovModel =
 
-    type InputModel = {pi:float list;
-                       A:Matrix<float>;
-                       Bk:Matrix<float> list;
-                       states:string list;
-                       evidence:string list;}
-
-    type Model = { pi:float list; 
-                   A:Matrix<float>; 
-                   B:Matrix<float>; 
-                   states:string list; 
-                   evidence:string list;
-                   epochs:int;
-                   error: float; }                 
-
-    
-    type Prediction = { prob: float; state: string; evidence:string; t:int; success: bool; }
-
-    let show (predict:Prediction) =
-            let sb = new StringBuilder()
-            sb.AppendFormat("[ prob: {0},", predict.prob)
-                .AppendLine()
-               .AppendFormat("state: {0},", predict.state)
-                .AppendLine()
-               .AppendFormat("evidence: {0},", predict.evidence)
-                .AppendLine()
-               .AppendFormat("t: {0},", predict.t)
-                .AppendLine()
-               .AppendFormat("success: {0}", predict.success)
-                .AppendLine()
-               .AppendFormat("]")
-                .AppendLine()
-               .ToString()
 
     (* retrieve the indices for supplied index *)
     let indices (V:string list) (index:string list) =
@@ -488,7 +457,7 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
           B = newB; 
           states = input.states; 
           evidence = input.evidence;
-          epochs = epochs;
+          epoch = epochs;
           error = error; }
 
     (* 

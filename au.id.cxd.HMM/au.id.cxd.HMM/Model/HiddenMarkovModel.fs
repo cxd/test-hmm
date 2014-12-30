@@ -8,25 +8,10 @@ open MathNet.Numerics
 open MathNet.Numerics.LinearAlgebra
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Formatters.Binary
+open au.id.cxd.HMM
+open au.id.cxd.HMM.DataTypes
 
 module HiddenMarkovModel =
-
-    type InputModel = {pi:float list;
-                       A:Matrix<float>;
-                       Bk:Matrix<float> list;
-                       states:string list;
-                       evidence:string list;}
-
-    type Model = { pi:float list; 
-                   A:Matrix<float>; 
-                   B:Matrix<float>; 
-                   states:string list; 
-                   evidence:string list; 
-                   epoch: int;
-                   error: float;}                 
-
-    
-    type Prediction = { prob: float; state: string; evidence:string; t:int; success: bool; }
 
     (* retrieve the indices for supplied index *)
     let indices (modelEvidence:string list) (examples:string list) =
@@ -473,26 +458,4 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
           epoch = epoch;
           error = error; }
 
-    (* 
-    write the supplied model to file.
-    *)
-    let writeToFile (model:'a) (file:FileInfo) : bool =
-        let binFormat = new BinaryFormatter()
-        try 
-            let outFile = new FileStream(file.FullName, FileMode.Create, FileAccess.Write, FileShare.None)
-            binFormat.Serialize(outFile, model)
-            outFile.Close()
-            true
-        with _ -> false
-
-    (*
-    read the supplied model from file
-    *)
-    let readFromFile (file:FileInfo) : Option<'a> =
-        let binFormat = new BinaryFormatter()
-        try
-            let inFile = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)
-            let data = binFormat.Deserialize(inFile) :?> 'a
-            inFile.Close()
-            Some(data)
-        with _ -> None
+ 

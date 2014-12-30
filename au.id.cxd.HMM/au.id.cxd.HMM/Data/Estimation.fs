@@ -15,6 +15,18 @@ module Estimation =
             | true -> items :: accum
             | false -> accum) [] data
         |> List.rev
+
+    (*
+    extract all sequences whose last "term" (the item before the state) is equal to the end term.
+    *)
+    let extractEndTermSeq (data: string list list) (endTerm: string) =
+        List.fold (
+            fun (accum : string list list) (items : string list) ->
+                let last = List.rev items |> List.tail |> List.head
+                match (last.ToLower().Equals(endTerm.ToLower())) with
+                | true -> items :: accum
+                | false -> accum
+            ) [] data
     
     (* for each state in states count the frequency and return a vector 
     this will add 1 to every state so there are no 0 values
@@ -369,3 +381,16 @@ module Estimation =
                         b
                 )
         B.NormalizeRows(1.0)
+
+
+    (*
+    Compute the set of transition matrices between S_i and S_j at time t when evidence variable t is observed.
+    This results in a list of matrices for each evidence variable (term) of state transitions between S_i and S_j
+    *)
+    let evidenceTransition (dataSet:string list list) (terms:string list) (states:string list) =
+        List.map (fun term -> 
+                      // extract all sequences from the data set that end in the current term.
+                      let data = extractEndTermSeq dataSet term
+                      // generate a state transition matrix for the subset.
+                      stateTransitions data states
+                      ) terms

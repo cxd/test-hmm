@@ -3,8 +3,8 @@
 #r "/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/script/MathNet.Numerics.FSharp.dll"
 #load "Data/Reader.fs"
 #load "Data/Estimation.fs"
+#load "Model/DataTypes.fs"
 #load "Model/HiddenMarkovModel.fs"
-
 open au.id.cxd.HMM
 open System
 open System.IO
@@ -12,6 +12,7 @@ open au.id.cxd.HMM.HiddenMarkovModel
 open System.Collections.Generic
 open MathNet.Numerics
 open MathNet.Numerics.LinearAlgebra
+open au.id.cxd.HMM.DataTypes
 
 // includes a placeholder "final" evidence var and an "end" state
 
@@ -57,6 +58,8 @@ let pi = Estimation.statePriors data states
 
 let T = Estimation.countTransitions data states
 let A = Estimation.stateTransitions data states
+
+let B1 = Estimation.evidenceTransition data evidenceVars states
 
 // [string list list] list - a list of subsequences
 let subSeqs = Estimation.allSubsequences data data

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -50,13 +50,14 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Component1.fs" />
-    <Compile Include="Script.fsx" />
     <Compile Include="Data\Reader.fs" />
     <Compile Include="Data\Estimation.fs" />
-    <Compile Include="TestCtiWords.fsx" />
-    <Compile Include="Model\Log_HiddenMarkovModel.fs" />
+    <Compile Include="Model\DataTypes.fs" />
+    <Compile Include="Model\Serialiser.fs" />
     <Compile Include="Model\HiddenMarkovModel.fs" />
-    <Compile Include="Model\HiddenMarkovModel_backup.fs" />
+    <Compile Include="Model\Log_HiddenMarkovModel.fs" />
+    <Compile Include="Model\MatrixHiddenMarkovModel.fs" />
+    <Compile Include="Model\MultiHiddenMarkovModel.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
@@ -64,6 +65,9 @@
     <None Include="RainExample.fsx" />
     <None Include="CtiTest.fsx" />
     <None Include="RainExample2.fsx" />
+    <None Include="Script.fsx" />
+    <None Include="TestCtiWords.fsx" />
+    <None Include="Model\HiddenMarkovModel_backup.fs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />

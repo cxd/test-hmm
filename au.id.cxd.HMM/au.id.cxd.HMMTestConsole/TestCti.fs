@@ -6,6 +6,7 @@ open au.id.cxd.HMM
 open System
 open System.IO
 open au.id.cxd.HMM.HiddenMarkovModel
+open au.id.cxd.HMM.DataTypes
 open System.Collections.Generic
 open MathNet.Numerics
 open MathNet.Numerics.LinearAlgebra
@@ -80,8 +81,8 @@ module TestCti =
         let model = HiddenMarkovModel.train inputModel data 0.0005 50
 
         let testFile = "/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/data/testmodel.bin"
-        let saveFlag = HiddenMarkovModel.writeToFile model (new FileInfo(testFile))
-        let (readModel:Option<Model>) = HiddenMarkovModel.readFromFile (new FileInfo(testFile))
+        let saveFlag = Serialiser.writeToFile model (new FileInfo(testFile))
+        let (readModel:Option<Model>) = Serialiser.readFromFile (new FileInfo(testFile))
 
         // next steps prediction and decoding methods for HMM
         // note testSeq contains only evidence variables
