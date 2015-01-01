@@ -58,6 +58,7 @@
     <Compile Include="Model\Log_HiddenMarkovModel.fs" />
     <Compile Include="Model\MatrixHiddenMarkovModel.fs" />
     <Compile Include="Model\MultiHiddenMarkovModel.fs" />
+    <Compile Include="RainExample3.fsx" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>

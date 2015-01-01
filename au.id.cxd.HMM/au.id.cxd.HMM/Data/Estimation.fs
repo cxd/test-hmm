@@ -277,7 +277,7 @@ module Estimation =
         let termArr = List.toArray terms
         let mat = DenseMatrix.init n m (fun i j -> 
             // term is i, state is j P(e_i | x_j)
-            let (freq, totalFreq) = countTermInState data termArr.[i] stateArr.[j]
+            let (freq, totalFreq) = countTermAtEndOfState data termArr.[i] stateArr.[j]
             freq / totalFreq
             )
         mat.NormalizeRows(1.0)

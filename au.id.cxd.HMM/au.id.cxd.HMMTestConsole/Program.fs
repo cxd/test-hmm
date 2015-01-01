@@ -13,7 +13,7 @@ module Program =
     [<EntryPoint>]
     let main args = 
         try 
-            TestRain.test()
+            TestRain2.test()
             //TestCti.test()
         with 
         | e -> ()

@@ -1,10 +1,13 @@
 ﻿<Properties StartupItem="au.id.cxd.HMMTestConsole/au.id.cxd.HMMTestConsole.fsproj" GitUserInfo="UsingMD">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="au.id.cxd.HMM/Model/MatrixHiddenMarkovModel.fs">
+  <MonoDevelop.Ide.Workbench>
     <Files>
       <File FileName="au.id.cxd.HMM/Model/Log_HiddenMarkovModel.fs" Line="1" Column="1" />
       <File FileName="au.id.cxd.HMM/Model/HiddenMarkovModel.fs" Line="1" Column="1" />
-      <File FileName="au.id.cxd.HMM/Model/MatrixHiddenMarkovModel.fs" Line="93" Column="93" />
+      <File FileName="au.id.cxd.HMM/Model/MatrixHiddenMarkovModel.fs" Line="11" Column="11" />
+      <File FileName="au.id.cxd.HMM/Data/Estimation.fs" Line="27" Column="27" />
+      <File FileName="au.id.cxd.HMM/RainExample2.fsx" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

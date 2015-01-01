@@ -24,8 +24,9 @@ module DataTypes =
                    states:string list; 
                    evidence:string list; 
                    epoch: int;
-                   error: float;}                 
+                   error: float;}          
 
+    
     
     type Prediction = { prob: float; state: string; evidence:string; t:int; success: bool; }
 
