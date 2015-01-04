@@ -5,7 +5,10 @@
 #r "/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/script/MathNet.Numerics.FSharp.dll"
 #load "Data/Reader.fs"
 #load "Data/Estimation.fs"
+#load "Model/DataTypes.fs"
 #load "Model/HiddenMarkovModel.fs"
+
+
 
 open au.id.cxd.HMM
 open System
@@ -14,6 +17,7 @@ open au.id.cxd.HMM.HiddenMarkovModel
 open System.Collections.Generic
 open MathNet.Numerics
 open MathNet.Numerics.LinearAlgebra
+open au.id.cxd.HMM.DataTypes
 
 
 let testData = "/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/data/example_train_data.csv"
@@ -26,10 +30,8 @@ let evidenceVars = Reader.readEvidenceVars data
 let pi = Estimation.statePriors data states
 let A = Estimation.stateTransitions data states
 // TODO: estimate sequence transition frequencies.
-//let endSequences = Estimation.uniqueSequences data "Ended"
-let subSeqs = Estimation.allSubsequences data data
 
-let Bk = [Estimation.avgPriorEvidences subSeqs evidenceVars states]
+let Bk = [Estimation.avgPriorEvidences data evidenceVars states]
 //let Bk = [Estimation.jointPriorEvidences subSeqs evidenceVars states]
 
 //let Bk = Estimation.priorEvidences subSeqs evidenceVars states
@@ -59,7 +61,7 @@ let evidenceCount = List.length evidenceVars
 // theta = 0.05
 // max epochs = 10
 
-let model = HiddenMarkovModel.train inputModel data 0.00001 10
+let model = HiddenMarkovModel.train inputModel data 0.00001 3
 
 let test4 = ["Ringing(inbound)";]
 let pred2 = HiddenMarkovModel.predict model test4

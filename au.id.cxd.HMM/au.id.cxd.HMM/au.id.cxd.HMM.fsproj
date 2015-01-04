@@ -63,12 +63,13 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="RainExample.fsx" />
     <None Include="CtiTest.fsx" />
     <None Include="RainExample2.fsx" />
     <None Include="Script.fsx" />
     <None Include="TestCtiWords.fsx" />
     <None Include="Model\HiddenMarkovModel_backup.fs" />
+    <None Include="Log_RainExample.fsx" />
+    <None Include="RainExample4.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />

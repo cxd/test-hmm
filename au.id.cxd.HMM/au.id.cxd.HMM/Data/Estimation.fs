@@ -254,14 +254,14 @@ module Estimation =
 
     (endOfSeqCount, totalCount)
     *)
-    let countTermAtEndOfState (subseq:string list list) (term:string) (state:string) =
-        let stateSeq = extractStateSeq subseq state
+    let countTermAtEndOfState (data:string list list) (term:string) (state:string) =
+        let stateSeq = extractStateSeq data state
         let stateCount = List.fold(fun n (items:string list) ->
                                 n + (countTermInEndOfSeq items term)
                                 ) 1.0 stateSeq
         let totalCount = List.fold(fun n (items:string list) ->
                                 n + (countTermInSeq items term)
-                            ) 1.0 subseq
+                            ) 1.0 data
         (stateCount, totalCount)
 
     (* determine the prior evidence matrix P(e_i | x_j) 
@@ -277,25 +277,30 @@ module Estimation =
         let termArr = List.toArray terms
         let mat = DenseMatrix.init n m (fun i j -> 
             // term is i, state is j P(e_i | x_j)
-            let (freq, totalFreq) = countTermAtEndOfState data termArr.[i] stateArr.[j]
+            let (freq, totalFreq) = countTermInState data termArr.[i] stateArr.[j]
             freq / totalFreq
             )
         mat.NormalizeRows(1.0)
 
-    
-
     (* calculate the prior evidences for all data sets *)
-    let priorEvidences (dataSet:string list list list) (terms:string list) (states:string list) =
-        List.map (fun data -> priorEvidence data terms states) dataSet
+    let priorEvidences (dataSet:string list list) (terms:string list) (states:string list) =
+        List.map (fun term -> 
+                      // extract all sequences from the data set that end in the current term.
+                      let data = extractEndTermSeq dataSet term
+                      // generate a state transition matrix for the subset.
+                      priorEvidence data terms states
+                      ) terms
 
+  
 
+  
      (* 
      calculate the prior evidences for all data sets
         assume each sample is independently and identically distributed
         return the average prior evidences
      *)
 
-    let avgPriorEvidences (dataSet:string list list list) (terms:string list) (states:string list) =
+    let avgPriorEvidences (dataSet:string list list) (terms:string list) (states:string list) =
         let m = List.length states
         let n = List.length terms
             
@@ -344,43 +349,16 @@ module Estimation =
         let B = DenseMatrix.init n m (fun i j -> 0.0)
         let V = DenseVector.init n (fun i -> 0.0)
 
-        let (V1, B1) = 
-            List.fold (fun (V, B:Matrix<float>) data -> 
+        let (V, B) = innerPriorEvidence dataSet terms states
+        Console.WriteLine("Totals:{0}{1}", Environment.NewLine, V)
+        Console.WriteLine("MAT:{0}{1}", Environment.NewLine, B)
 
-                let (totalVec, mat) = innerPriorEvidence data terms states
-                Console.WriteLine("Totals:{0}{1}", Environment.NewLine, totalVec)
-                Console.WriteLine("MAT:{0}{1}", Environment.NewLine, mat)
-
-                let B1 = B + mat
-                let V1 = V + totalVec 
-
-                (V1, B1)) (V, B) dataSet
-        
         (DenseMatrix.init n m (fun i j -> 
-                                let t = V1.[i]
-                                B1.[i,j]/t)).NormalizeRows(1.0)
+                                let t = V.[i]
+                                B.[i,j]/t)).NormalizeRows(1.0)
 
 
- (* 
-     calculate the prior evidences for all data sets
-        assume each sample is independently and identically distributed
-        return the average prior evidences
-     *)
-
-    let jointPriorEvidences (dataSet:string list list list) (terms:string list) (states:string list) =
-        let m = List.length states
-        let n = List.length terms
-            
-        let BList = priorEvidences dataSet terms states
-
-        let B = DenseMatrix.init n m (
-                    fun i j ->
-                        let b = List.fold (
-                                    fun p (Bk:Matrix<float>) ->
-                                        p + Bk.[i,j]) 1.0 BList
-                        b
-                )
-        B.NormalizeRows(1.0)
+ 
 
 
     (*

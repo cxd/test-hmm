@@ -26,7 +26,7 @@ let data =
 
      ["noumbrella"; "umbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "rain"];
-     ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "rain"];
+     ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "dry"];
      ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "umbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "rain"];
 
@@ -40,8 +40,8 @@ let data =
      ["absent"; "absent"; "absent"; "storm"];
     
      ["noumbrella"; "absent"; "storm"];
-     ["noumbrella"; "absent"; "noumbrella"; "rain"];
-     ["noumbrella"; "absent"; "noumbrella"; "absent"; "storm"];
+     ["noumbrella"; "absent"; "umbrella"; "rain"];
+     ["noumbrella"; "absent"; "umbrella"; "absent"; "storm"];
      ["noumbrella"; "absent"; "absent"; "absent"; "umbrella"; "rain"];
      ["noumbrella"; "umbrella"; "absent"; "absent"; "storm"];
      ["noumbrella"; "absent"; "absent"; "absent"; "storm"];
@@ -61,11 +61,8 @@ let A = Estimation.stateTransitions data states
 
 let B1 = Estimation.evidenceTransition data evidenceVars states
 
-// [string list list] list - a list of subsequences
-let subSeqs = Estimation.allSubsequences data data
-
-//let Bk = Estimation.avgPriorEvidences subSeqs evidenceVars states
-let Bk = Estimation.jointPriorEvidences subSeqs evidenceVars states
+let Bk = Estimation.avgPriorEvidences data evidenceVars states
+//let Bk = Estimation.jointPriorEvidences subSeqs evidenceVars states
 
 
 let inputModel = {

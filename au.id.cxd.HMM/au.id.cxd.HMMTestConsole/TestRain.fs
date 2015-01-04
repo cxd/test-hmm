@@ -40,11 +40,10 @@ module TestRain =
         // [string list list] list - a list of subsequences
         let subSeqs = Estimation.allSubsequences data endSequences
 
-        let Bk = Estimation.priorEvidences subSeqs evidenceVars states
+        let Bk = [Estimation.priorEvidence data evidenceVars states]
 
         let endSequences2 = Estimation.uniqueSequences data "dry"
         let subSeq2 = Estimation.allSubsequences data endSequences2
-        let Bk2 = Estimation.priorEvidences subSeq2 evidenceVars states
 
 
         let inputModel = {

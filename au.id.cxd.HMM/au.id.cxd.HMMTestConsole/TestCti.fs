@@ -41,7 +41,7 @@ module TestCti =
         // [string list list] list - a list of subsequences
         let subSeqs = Estimation.allSubsequences data endSequences
 
-        let Bk = Estimation.avgPriorEvidences subSeqs evidenceVars states
+        let Bk = Estimation.avgPriorEvidences data evidenceVars states
 
         // so A and Bk and pi comprise the prior distributions for state transitions
         // A = P(x_t | x_t-1)

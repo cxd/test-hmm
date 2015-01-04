@@ -61,16 +61,13 @@ module TestRain2 =
 
         let B1 = Estimation.evidenceTransition data evidenceVars states
 
-        // [string list list] list - a list of subsequences
-        let subSeqs = Estimation.allSubsequences data data
-
-        let Bk = Estimation.priorEvidences subSeqs evidenceVars states
+        let Bk = Estimation.priorEvidence data evidenceVars states
 
 
         let inputModel = {
             pi = pi;
             A = A;
-            Bk = Bk;
+            Bk = [Bk];
             states = states;
             evidence = evidenceVars;
             epoch = 10;

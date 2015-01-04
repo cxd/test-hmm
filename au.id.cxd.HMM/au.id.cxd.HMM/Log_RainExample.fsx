@@ -3,15 +3,17 @@
 #r "/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/script/MathNet.Numerics.FSharp.dll"
 #load "Data/Reader.fs"
 #load "Data/Estimation.fs"
-#load "Model/MultiHiddenMarkovModel.fs"
+#load "Model/DataTypes.fs"
+#load "Model/Log_HiddenMarkovModel.fs"
 open au.id.cxd.HMM
 open System
 open System.IO
-open au.id.cxd.HMM.Multi
-open au.id.cxd.HMM.Multi.MultiHiddenMarkovModel
+open au.id.cxd.HMM.Log.HiddenMarkovModel
 open System.Collections.Generic
 open MathNet.Numerics
 open MathNet.Numerics.LinearAlgebra
+open au.id.cxd.HMM.DataTypes
+open au.id.cxd.HMM.Log
 
 // includes a placeholder "final" evidence var and an "end" state
 
@@ -24,7 +26,7 @@ let data =
 
 
      ["noumbrella"; "umbrella"; "rain"];
-     ["noumbrella"; "umbrella"; "noumbrella"; "dry"];
+     ["noumbrella"; "umbrella"; "noumbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "dry"];
      ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "umbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "rain"];
@@ -39,8 +41,8 @@ let data =
      ["absent"; "absent"; "absent"; "storm"];
     
      ["noumbrella"; "absent"; "storm"];
-     ["noumbrella"; "absent"; "noumbrella"; "rain"];
-     ["noumbrella"; "absent"; "noumbrella"; "absent"; "storm"];
+     ["noumbrella"; "absent"; "umbrella"; "rain"];
+     ["noumbrella"; "absent"; "umbrella"; "absent"; "storm"];
      ["noumbrella"; "absent"; "absent"; "absent"; "umbrella"; "rain"];
      ["noumbrella"; "umbrella"; "absent"; "absent"; "storm"];
      ["noumbrella"; "absent"; "absent"; "absent"; "storm"];
@@ -60,37 +62,37 @@ let A = Estimation.stateTransitions data states
 
 let B1 = Estimation.evidenceTransition data evidenceVars states
 
+// [string list list] list - a list of subsequences
+let subSeqs = Estimation.allSubsequences data data
 
-let Bk = Estimation.priorEvidences data evidenceVars states
+//let Bk = Estimation.avgPriorEvidences subSeqs evidenceVars states
+let Bk = Estimation.jointPriorEvidences subSeqs evidenceVars states
 
-let Bk2 = Estimation.avgPriorEvidences data evidenceVars states
 
 let inputModel = {
     pi = pi;
     A = A;
-    Bk = Bk;
+    Bk = [Bk];
     states = states;
     evidence = evidenceVars;
-    epoch = 3;
-    error = 0.0001
     } 
 
 
-let model = MultiHiddenMarkovModel.train inputModel data
+let model = HiddenMarkovModel.train inputModel data 0.0001 10
 
 
-let predict = MultiHiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
+let predict = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
 
-let predict2 = MultiHiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella";]
-
-
-let predict3 = MultiHiddenMarkovModel.predict model ["umbrella"; "absent"; "absent"]
+let predict2 = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella";]
 
 
-let predict4 = MultiHiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; "absent";]
-
-let predict5 = MultiHiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella"; "absent";]
+let predict3 = HiddenMarkovModel.predict model ["umbrella"; "absent"; "absent"]
 
 
-let predict6 = MultiHiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; "noumbrella"; "noumbrella"]
+let predict4 = HiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; "absent";]
+
+let predict5 = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella"; "absent";]
+
+
+let predict6 = HiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; "noumbrella"; "noumbrella"]
 

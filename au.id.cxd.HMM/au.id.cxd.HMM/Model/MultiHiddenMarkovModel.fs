@@ -83,27 +83,31 @@ module MultiHiddenMarkovModel =
                 //Console.WriteLine("Accum: {0}", accum)
 
                 let alpha2 = cache (t-1) (fun () -> alphaInner (t - 1) pi A B V accum)
+
+
                 let totals = DenseMatrix.init accum.RowCount accum.ColumnCount (
                                     fun i j ->
-                                        alpha2.[i, t - 1] * A.[t-1, j] )
+                                        alpha2.[i, t - 1] * A.[t, j] )
                 
-                let total = totals.ColumnSums() * B.[vk, t]
-                // scaling coeff
-                (*
-                c_{t+1} = \sum_{i=1}^N \hat{\alpha_t|(i) a_{ij} b_j(O_{t+1})
-                *)
-                let c = total.Sum()
-                match c = 0.0 with
-                | false -> 
-                    //Console.WriteLine("Set Row: {0} Dim: [{1}, {2}]", vk, accum.RowCount, accum.ColumnCount)
-                    //Console.WriteLine("Row Data: {0}", total/c)
-                    accum.SetRow(vk, total / c)
-                    accum
-                | true -> accum
+                let sums = totals.ColumnSums()
+                let total = DenseVector.init totals.ColumnCount (
+                                fun j -> sums.[j] * B.[vk, j]
+                            )
+                
+                accum.SetRow(vk, total)
+                accum
 
             match T = 0 with
             | true -> accum
-            | _ -> List.fold (fun (accum:Matrix<float>) (k:int) -> inner k T accum) accum V
+            | _ -> List.fold (fun (accum:Matrix<float>) (k:int) -> 
+                                let alpha1 = inner k T accum
+                                // scaling \hat{\alpha_t} = \frac{1}{\sum_i \bar{\alpha_t}(i)
+                                let scale = alpha1.ColumnSums().Sum()
+                                let alpha2 = match scale = 0.0 with
+                                             | true -> alpha1
+                                             | false -> alpha1 / scale
+                                alpha2
+                                ) accum V
 
         let accum = DenseMatrix.init evidenceCount stateCount (
                         fun t j ->
@@ -122,13 +126,118 @@ module MultiHiddenMarkovModel =
                             | _ -> accum.[i,j]
                     )
 
-        Console.WriteLine("Start Dim: [{0}, {1}]", accum.RowCount, accum.ColumnCount)
-        Console.WriteLine("Start: {0}{1}", Environment.NewLine, accum')        
-            
         let alphaResult = alphaInner T pi A B V accum'
         map.Clear()
         alphaResult.NormalizeRows(1.0)
-        
+
+
+     (* 
+
+     the unscaled alpha forward equation used during the beta backward equation
+   
+    T = time T
+    pi = P(x_i)
+    a_ij = P(x_j | x_i)
+   b_ij = P(x_j | e_i)
+
+   T represents i current state we need to predict j next state
+
+   V - indices of evidence variables observed up to time T
+
+   Based on the Erratum for "A Tutorial on Hidden Markov Models..."
+   the scale factor for \hat{\alpha_t} = c_t \bar{\alpha_t}
+   where 
+   \bar{\alpha_t}(j) = \sum_i^N \hat{\alpha_{t-1}}(i)a_{ij}b_j(O_{t}
+
+   and
+
+   c_t = \frac{1}{sum_i \bar{\alpha_t}(i)}
+
+   in this case the last iteration is not scaled with the scaling factor c_{t}
+    *)
+    let rec alphaUnscaled (T:int) (pi:float list) (A:Matrix<float>) (B:Matrix<float>) (stateCount:int) (evidenceCount:int) (V:int list):Matrix<float> = 
+        let finalT = T
+        (* locally scoped cache *)
+        let map = new Dictionary<int, Matrix<float>>()
+        let cache i methodFn = 
+            match map.ContainsKey(i) with
+            | true -> map.[i]
+            | false -> 
+                map.Add(i, methodFn())
+                map.[i]
+
+        (* recurse on 
+        time T 
+        with priors pi 
+        and state transition matrix A 
+        with evidence matrix B
+        and index of transitions V
+        accumulate in matrix accum
+        *)
+        let rec alphaInner (T:int) (pi:float list) (A:Matrix<float>) (B:Matrix<float>) (V:int list) (accum:Matrix<float>):Matrix<float> =
+            // compute new probabilities for evidence var at vk, at time t and update the row t in matrix accum
+            (*
+            \alpha_j(t) = b_{jk}v(t)\sum_{i=1}^c \alpha_i(t-1)a_{ij}
+
+            vk = current evidence variable in V
+            t = index of state at time t
+
+            *)
+            let inner (vk:int) (t:int) (accum:Matrix<float>):Matrix<float> =
+                //Console.WriteLine("Accum: {0}", accum)
+
+                let alpha2 = cache (t-1) (fun () -> alphaInner (t - 1) pi A B V accum)
+
+
+                let totals = DenseMatrix.init accum.RowCount accum.ColumnCount (
+                                    fun i j ->
+                                        alpha2.[i, t - 1] * A.[t, j] )
+                
+                let sums = totals.ColumnSums()
+                let total = DenseVector.init totals.ColumnCount (
+                                fun j -> sums.[j] * B.[vk, j]
+                            )
+                
+                accum.SetRow(vk, total)
+                accum
+
+            match T = 0 with
+            | true -> accum
+            | _ -> List.fold (fun (accum:Matrix<float>) (k:int) -> 
+                                let alpha1 = inner k T accum
+                                match T = finalT with
+                                | true -> 
+                                    // the unscaled equation will not scale the last iteration resulting in \bar{\alpha} rather than \hat{\alpha}
+                                    alpha1
+                                | false -> 
+                                    // scaling \hat{\alpha_t} = \frac{1}{\sum_i \bar{\alpha_t}(i)
+                                    let scale = alpha1.ColumnSums().Sum()
+                                    let alpha2 = match scale = 0.0 with
+                                                 | true -> alpha1
+                                                 | false -> alpha1 / scale
+                                    alpha2
+                                ) accum V
+
+        let accum = DenseMatrix.init evidenceCount stateCount (
+                        fun t j ->
+                            let vlen = List.length V
+                            match t < vlen with
+                            | true -> let idx = V.[t]
+                                      pi.[j] * B.[idx, j]
+                            | false -> pi.[j] // (Convert.ToDouble(evidenceCount))
+                    )
+        let accum' = DenseMatrix.init accum.RowCount accum.ColumnCount (
+                        fun i j ->
+                            let row = accum.Row(i)
+                            let c = row.Sum()
+                            match c = 0.0 with
+                            | false -> accum.[i,j]/c
+                            | _ -> accum.[i,j]
+                    )
+
+        let alphaResult = alphaInner T pi A B V accum'
+        map.Clear()
+        alphaResult.NormalizeRows(1.0)
 
     (*
     this is the time reversed algorithm of alpha
@@ -153,7 +262,7 @@ module MultiHiddenMarkovModel =
                 map.Add(i, methodFn())
                 map.[i]
 
-        let alpha0 = alpha T pi A B stateCount evidenceCount V
+        let alpha0 = alphaUnscaled T pi A B stateCount evidenceCount V
 
         let rec betaInner (T:int) (t:int) (pi:float list) (A:Matrix<float>) (B:Matrix<float>) (V:int list) (accum:Matrix<float>) =
             // perform the calculation 
@@ -166,10 +275,8 @@ module MultiHiddenMarkovModel =
                 // alpha2.[i, t - 1] * A.[t-1, j] * B.[vk, t]
                 // calculate the scaling factor D_t = \prod_{\t=1}^T c_t
 
-                let alphaCol = alpha0.Column(t)
-                let d = Array.reduce (fun a b -> a+b) (alphaCol.ToArray())
-
-
+                let d = Array.reduce (fun a b -> a+b) (alpha0.ToColumnWiseArray())
+                // vk = i, t
                 // \beta_i(t) = \sum_{j=1}^C \beta_j(t+1)a_{ij}b_{jk}v(t+1)
                 let totals = DenseMatrix.init accum.RowCount accum.ColumnCount (
                                     fun i j ->
@@ -178,6 +285,7 @@ module MultiHiddenMarkovModel =
                 // scaling coefficient
                 match d = 0.0 with
                 | false ->
+                    // \beta_t(i)
                     accum.SetRow(vk, total / d)
                     accum
                 | true -> accum
@@ -205,9 +313,6 @@ module MultiHiddenMarkovModel =
                             | _ -> accum.[i,j]
                     )
         
-        Console.WriteLine("Start Dim: [{0}, {1}]", accum.RowCount, accum.ColumnCount)
-        Console.WriteLine("Start: {0}{1}", Environment.NewLine, accum') 
-
         //let test = DenseMatrix.init (List.length V) A.ColumnCount ( fun i j -> 1.0 )
         let betaResult = betaInner T 0 pi A B V accum'
         map.Clear()
@@ -229,11 +334,15 @@ module MultiHiddenMarkovModel =
 
         *)
     let gamma i t (alphaM:Matrix<float>) (betaM:Matrix<float>) : float =
+            Console.WriteLine("Alpha: {0}", alphaM)
+            Console.WriteLine("Beta: {0}", betaM)
             let denom = List.map (fun j ->
                                     alphaM.[t, j]*betaM.[t, j]) [0..(alphaM.ColumnCount - 1)]
                         |> List.sum 
             let num = alphaM.[t, i] * betaM.[t,i]
-            let g = num / denom
+            let g = match denom = 0.0 with
+                    | true -> 0.0
+                    | false -> num / denom
             Console.WriteLine("Gamma: {0} T: {1} G: {2}", i, t, g)
             g
 
@@ -338,12 +447,12 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
             // compute the denominator
             let denom = List.fold (fun n i1 ->
                                     n + (List.map (fun j1 -> 
-                                                Console.WriteLine("i = {0} j={1} i1= {2} j1 = {3} t={4}", i, j, i1, j1, t)    
-
                                                 alphaM.[t, i1] * A.[i1, j1] * BT1.[t, j] * betaMT1.[t, j]
                                         ) [0..(A.ColumnCount - 1)] |> List.sum) ) 0.0 [0..(A.RowCount-1)]
             let num = alphaM.[t, i] * A.[i, j] * BT1.[t, j] * betaMT1.[t, j]
-            num / denom
+            match denom = 0.0 with
+            | true -> 0.0
+            | false -> num / denom
 
         // reestimation parameters
         (*
@@ -354,9 +463,9 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
         \bar{pi_i} = \gamma_1 (i)
         $$
         *)
-        let piNew (V:int list) (A:Matrix<float>) (B:Matrix<float>)  =
-            let alphaM = alpha ((List.length states)-1) pi A B stateCount evidenceCount V   
-            let betaM = beta ((List.length states) - 1) pi A B stateCount evidenceCount V 
+        let piNew (V:int list) (lpi:float list) (lA:Matrix<float>) (lB:Matrix<float>)  =
+            let alphaM = alpha ((List.length states)-1) lpi lA lB stateCount evidenceCount V   
+            let betaM = beta ((List.length states) - 1) lpi lA lB stateCount evidenceCount V 
             List.map (fun i -> gamma 0 i alphaM betaM) [0..(alphaM.ColumnCount-1)]
         
         (*
@@ -366,26 +475,28 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
         \bar{a_{ij} } = \frac { \sum_{t=1}^{T} \epsilon_t(i, j) } {\sum_{t=1}^T \gamma_t(i)}
         $$
         *)
-        let aNew (V:int list) (A:Matrix<float>) (B:Matrix<float> list) =
+        let aNew (V:int list) (lpi:float list) (lA:Matrix<float>) (lB:Matrix<float> list) =
             let V2 = indices input.evidence input.evidence
             let denoms = List.map (
                             fun i ->
                                 List.mapi (fun t Bt ->
-                                            let alphaM = alpha ((List.length states)-1) pi A Bt stateCount evidenceCount V   
-                                            let betaM = beta ((List.length states) - 1) pi A Bt stateCount evidenceCount V
+                                            let alphaM = alpha ((List.length states)-1) lpi lA Bt stateCount evidenceCount V   
+                                            let betaM = beta ((List.length states) - 1) lpi lA Bt stateCount evidenceCount V
                                             List.fold (fun n v -> n + gamma i v alphaM betaM) 0.0 V2
-                                            ) B |> List.sum
-                                            ) [0..(A.RowCount - 1)]
+                                            ) lB |> List.sum
+                                            ) [0..(lA.RowCount - 1)]
             Console.WriteLine("denom: {0}",denoms)                    
-            DenseMatrix.init A.RowCount A.ColumnCount (fun i j ->
+            DenseMatrix.init lA.RowCount lA.ColumnCount (fun i j ->
                                 let num = List.fold (fun n t ->
-                                                let Bt = B.[t]
-                                                let Bt1 = B.[t+1]
-                                                let alphaM = alpha ((List.length states)-1) pi A Bt stateCount evidenceCount V   
-                                                let betaM = beta ((List.length states) - 1) pi A Bt1 stateCount evidenceCount V 
-                                                List.fold(fun n v -> n + epsilon v i j alphaM betaM A Bt) n V
-                                            ) 0.0 [0..((List.length B) - 2)]
-                                num / denoms.[i])
+                                                let Bt = lB.[t]
+                                                let Bt1 = lB.[t+1]
+                                                let alphaM = alpha ((List.length states)-1) lpi lA Bt stateCount evidenceCount V   
+                                                let betaM = beta ((List.length states) - 1) lpi lA Bt1 stateCount evidenceCount V 
+                                                List.fold (fun n v -> n + epsilon v i j alphaM betaM lA Bt) 0.0 V
+                                            ) 0.0 [0..((List.length lB) - 2)]
+                                match denoms.[i] = 0.0 with
+                                | true -> 0.0
+                                | false -> num / denoms.[i])
         
         (*
         restimating \bar{A}
@@ -400,25 +511,31 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
         $$
         the observation at time Tk contains the symbol v_k
         *)
-        let bNew (V:int list) (A:Matrix<float>) (B:Matrix<float> list) =
+        let bNew (V:int list) (lpi:float list) (lA:Matrix<float>) (lB:Matrix<float> list) =
             let V2 = indices input.evidence input.evidence
             let denom = List.map(fun i ->
                             List.mapi (fun t Bt ->
-                                    let alphaM = alpha ((List.length states)-1) pi A Bt stateCount evidenceCount V   
-                                    let betaM = beta ((List.length states) - 1) pi A Bt stateCount evidenceCount V
+                                    let alphaM = alpha ((List.length states)-1) lpi lA Bt stateCount evidenceCount V   
+                                    let betaM = beta ((List.length states) - 1) lpi lA Bt stateCount evidenceCount V
                                     // gamma state i
                                     List.fold (fun n v -> n + gamma i v alphaM betaM) 0.0 V2
-                                    ) B |> List.sum) [0..(A.RowCount - 1)] 
+                                    ) lB |> List.sum) [0..(lA.RowCount - 1)] 
                         |> List.sum
             Console.WriteLine("B denoms: {0}", denom)            
             List.mapi (fun t (Bt:Matrix<float>) ->
-                        DenseMatrix.init Bt.RowCount A.ColumnCount (fun i j ->
-                            let alphaM = alpha ((List.length states)-1) pi A Bt stateCount evidenceCount V   
-                            let betaM = beta ((List.length states) - 1) pi A Bt stateCount evidenceCount V
+                        let alphaM = alpha ((List.length states)-1) lpi lA Bt stateCount evidenceCount V   
+                        let betaM = beta ((List.length states) - 1) lpi lA Bt stateCount evidenceCount V
+                        Console.WriteLine("t: {0}", t)
+                        Console.WriteLine("Bt: {0}", Bt)
+                        Console.WriteLine("Alpha: {0}", alphaM)
+                        Console.WriteLine("Beta: {0}", betaM)
+                        DenseMatrix.init Bt.RowCount lA.ColumnCount (fun i j ->
                             // gamma state j
-                            let num = List.fold (fun n v -> n + gamma j v alphaM betaM) 0.0 V
-                            num / denom
-                        )) B
+                            let num = gamma j i alphaM betaM
+                            match denom = 0.0 with
+                            | true -> 0.0
+                            | false -> num / denom
+                        )) lB
             
         
         let rec innerTrain epoch error (piBar:float list) (barA:Matrix<float>) (barB:Matrix<float> list) =
@@ -427,14 +544,14 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
             | false ->
                 let (oldA, oldB) = (barA, barB)
                 let (pi2, Anew, Bnew) = 
-                    List.fold (fun (pi, barA, barB) trainSequence ->
+                    List.fold (fun ((pi, barA, barB):float list * Matrix<float> * Matrix<float> list) trainSequence ->
                                 match (List.length trainSequence) > 2 with
                                 | false -> (pi, barA, barB)
                                 | true ->
                                     let V = indices input.evidence trainSequence
-                                    let Anew = aNew V barA barB
-                                    let Bnew = bNew V barA barB
-                                    let pi2 = piNew V barA barB.[V.[0]]
+                                    let pi2 = piNew V pi barA barB.[0]
+                                    let Anew = aNew V pi2 barA barB
+                                    let Bnew = bNew V pi2 barA barB
                                     (pi2, Anew, Bnew)) (piBar, barA, barB) trainSequences
                 let matrixDelta (M1:Matrix<float>) (M2:Matrix<float>) = 
                      Array.zip (M1.ToColumnWiseArray()) (M2.ToColumnWiseArray())

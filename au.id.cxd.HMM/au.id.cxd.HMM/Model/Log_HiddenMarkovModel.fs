@@ -10,6 +10,7 @@ open System.Runtime.Serialization
 open System.Runtime.Serialization.Formatters.Binary
 open au.id.cxd.HMM.DataTypes
 
+
 module HiddenMarkovModel =
 
 

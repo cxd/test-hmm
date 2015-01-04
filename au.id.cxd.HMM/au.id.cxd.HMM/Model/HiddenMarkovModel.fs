@@ -62,27 +62,29 @@ module HiddenMarkovModel =
                 //Console.WriteLine("Accum: {0}", accum)
 
                 let alpha2 = cache (t-1) (fun () -> alphaInner (t - 1) pi A B V accum)
+
+
                 let totals = DenseMatrix.init accum.RowCount accum.ColumnCount (
                                     fun i j ->
-                                        alpha2.[i, t - 1] * A.[t-1, j] )
+                                        alpha2.[i, t - 1] * A.[t, j] )
                 
-                let total = totals.ColumnSums() * B.[vk, t]
-                // scaling coeff
-                (*
-                c_{t+1} = \sum_{i=1}^N \hat{\alpha_t|(i) a_{ij} b_j(O_{t+1})
-                *)
-                let c = total.Sum()
-                match c = 0.0 with
-                | false -> 
-                    //Console.WriteLine("Set Row: {0} Dim: [{1}, {2}]", vk, accum.RowCount, accum.ColumnCount)
-                    //Console.WriteLine("Row Data: {0}", total/c)
-                    accum.SetRow(vk, total / c)
-                    accum
-                | true -> accum
+                let sums = totals.ColumnSums()
+                let total = DenseVector.init totals.ColumnCount (
+                                fun j -> sums.[j] * B.[vk, j]
+                            )
+                
+                accum.SetRow(vk, total)
+                accum
 
             match T = 0 with
             | true -> accum
-            | _ -> List.fold (fun (accum:Matrix<float>) (k:int) -> inner k T accum) accum V
+            | _ -> List.fold (fun (accum:Matrix<float>) (k:int) -> 
+                                let alpha1 = inner k T accum
+                                // scaling \hat{\alpha_t} = \frac{1}{\sum_i \bar{\alpha_t}(i)
+                                let scale = alpha1.ColumnSums().Sum()
+                                let alpha2 = alpha1 / scale
+                                alpha2
+                                ) accum V
 
         let accum = DenseMatrix.init evidenceCount stateCount (
                         fun t j ->
@@ -101,12 +103,116 @@ module HiddenMarkovModel =
                             | _ -> accum.[i,j]
                     )
 
-        Console.WriteLine("Start Dim: [{0}, {1}]", accum.RowCount, accum.ColumnCount)
-        Console.WriteLine("Start: {0}{1}", Environment.NewLine, accum')        
-            
         let alphaResult = alphaInner T pi A B V accum'
+        map.Clear()
         alphaResult.NormalizeRows(1.0)
-        
+
+
+     (* 
+
+     the unscaled alpha forward equation used during the beta backward equation
+   
+    T = time T
+    pi = P(x_i)
+    a_ij = P(x_j | x_i)
+   b_ij = P(x_j | e_i)
+
+   T represents i current state we need to predict j next state
+
+   V - indices of evidence variables observed up to time T
+
+   Based on the Erratum for "A Tutorial on Hidden Markov Models..."
+   the scale factor for \hat{\alpha_t} = c_t \bar{\alpha_t}
+   where 
+   \bar{\alpha_t}(j) = \sum_i^N \hat{\alpha_{t-1}}(i)a_{ij}b_j(O_{t}
+
+   and
+
+   c_t = \frac{1}{sum_i \bar{\alpha_t}(i)}
+
+   in this case the last iteration is not scaled with the scaling factor c_{t}
+    *)
+    let rec alphaUnscaled (T:int) (pi:float list) (A:Matrix<float>) (B:Matrix<float>) (stateCount:int) (evidenceCount:int) (V:int list):Matrix<float> = 
+        let finalT = T
+        (* locally scoped cache *)
+        let map = new Dictionary<int, Matrix<float>>()
+        let cache i methodFn = 
+            match map.ContainsKey(i) with
+            | true -> map.[i]
+            | false -> 
+                map.Add(i, methodFn())
+                map.[i]
+
+        (* recurse on 
+        time T 
+        with priors pi 
+        and state transition matrix A 
+        with evidence matrix B
+        and index of transitions V
+        accumulate in matrix accum
+        *)
+        let rec alphaInner (T:int) (pi:float list) (A:Matrix<float>) (B:Matrix<float>) (V:int list) (accum:Matrix<float>):Matrix<float> =
+            // compute new probabilities for evidence var at vk, at time t and update the row t in matrix accum
+            (*
+            \alpha_j(t) = b_{jk}v(t)\sum_{i=1}^c \alpha_i(t-1)a_{ij}
+
+            vk = current evidence variable in V
+            t = index of state at time t
+
+            *)
+            let inner (vk:int) (t:int) (accum:Matrix<float>):Matrix<float> =
+                //Console.WriteLine("Accum: {0}", accum)
+
+                let alpha2 = cache (t-1) (fun () -> alphaInner (t - 1) pi A B V accum)
+
+
+                let totals = DenseMatrix.init accum.RowCount accum.ColumnCount (
+                                    fun i j ->
+                                        alpha2.[i, t - 1] * A.[t, j] )
+                
+                let sums = totals.ColumnSums()
+                let total = DenseVector.init totals.ColumnCount (
+                                fun j -> sums.[j] * B.[vk, j]
+                            )
+                
+                accum.SetRow(vk, total)
+                accum
+
+            match T = 0 with
+            | true -> accum
+            | _ -> List.fold (fun (accum:Matrix<float>) (k:int) -> 
+                                let alpha1 = inner k T accum
+                                match T = finalT with
+                                | true -> 
+                                    // the unscaled equation will not scale the last iteration resulting in \bar{\alpha} rather than \hat{\alpha}
+                                    alpha1
+                                | false -> 
+                                    // scaling \hat{\alpha_t} = \frac{1}{\sum_i \bar{\alpha_t}(i)
+                                    let scale = alpha1.ColumnSums().Sum()
+                                    let alpha2 = alpha1 / scale
+                                    alpha2
+                                ) accum V
+
+        let accum = DenseMatrix.init evidenceCount stateCount (
+                        fun t j ->
+                            let vlen = List.length V
+                            match t < vlen with
+                            | true -> let idx = V.[t]
+                                      pi.[j] * B.[idx, j]
+                            | false -> pi.[j] // (Convert.ToDouble(evidenceCount))
+                    )
+        let accum' = DenseMatrix.init accum.RowCount accum.ColumnCount (
+                        fun i j ->
+                            let row = accum.Row(i)
+                            let c = row.Sum()
+                            match c = 0.0 with
+                            | false -> accum.[i,j]/c
+                            | _ -> accum.[i,j]
+                    )
+
+        let alphaResult = alphaInner T pi A B V accum'
+        map.Clear()
+        alphaResult.NormalizeRows(1.0)
 
     (*
     this is the time reversed algorithm of alpha
@@ -131,7 +237,7 @@ module HiddenMarkovModel =
                 map.Add(i, methodFn())
                 map.[i]
 
-        let alpha0 = alpha T pi A B stateCount evidenceCount V
+        let alpha0 = alphaUnscaled T pi A B stateCount evidenceCount V
 
         let rec betaInner (T:int) (t:int) (pi:float list) (A:Matrix<float>) (B:Matrix<float>) (V:int list) (accum:Matrix<float>) =
             // perform the calculation 
@@ -144,10 +250,8 @@ module HiddenMarkovModel =
                 // alpha2.[i, t - 1] * A.[t-1, j] * B.[vk, t]
                 // calculate the scaling factor D_t = \prod_{\t=1}^T c_t
 
-                let alphaCol = alpha0.Column(t)
-                let d = Array.reduce (fun a b -> a+b) (alphaCol.ToArray())
-
-
+                let d = Array.reduce (fun a b -> a+b) (alpha0.ToColumnWiseArray())
+                // vk = i, t
                 // \beta_i(t) = \sum_{j=1}^C \beta_j(t+1)a_{ij}b_{jk}v(t+1)
                 let totals = DenseMatrix.init accum.RowCount accum.ColumnCount (
                                     fun i j ->
@@ -156,6 +260,7 @@ module HiddenMarkovModel =
                 // scaling coefficient
                 match d = 0.0 with
                 | false ->
+                    // \beta_t(i)
                     accum.SetRow(vk, total / d)
                     accum
                 | true -> accum
@@ -183,11 +288,9 @@ module HiddenMarkovModel =
                             | _ -> accum.[i,j]
                     )
         
-        Console.WriteLine("Start Dim: [{0}, {1}]", accum.RowCount, accum.ColumnCount)
-        Console.WriteLine("Start: {0}{1}", Environment.NewLine, accum') 
-
         //let test = DenseMatrix.init (List.length V) A.ColumnCount ( fun i j -> 1.0 )
         let betaResult = betaInner T 0 pi A B V accum'
+        map.Clear()
         betaResult.NormalizeRows(1.0)
 
     (*
@@ -291,13 +394,13 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
         (*
         inner training function
         *)
-        let rec innerTrain epoch error (matA, matB) : int * float * Matrix<float> * Matrix<float> =
+        let rec innerTrain epoch error ((matPi, matA, matB):float list * Matrix<float> * Matrix<float>) : int * float * float list * Matrix<float> * Matrix<float> =
             match epoch >= maxEpochs with
-            | true -> (epoch, error, matA, matB)
+            | true -> (epoch, error, matPi, matA, matB)
             | false ->  
                 // for each training sequence
-                let (newA, newB) =
-                    List.fold (fun (oldA, oldB) trainSeq ->
+                let (newPi, newA, newB) =
+                    List.fold (fun (oldPi, oldA, oldB) trainSeq ->
                             // select the subsequence of evidence vars
                             let example = trainSeq |> List.toSeq |> Seq.take ((List.length trainSeq) - 1) |> Seq.toList
                             let V = indices input.evidence example
@@ -320,8 +423,8 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
                                         | false -> [0..(T-1)]
 
                             // for each possible sequence in B
-                            let (newA, newB) = 
-                                List.fold(fun ((oldA, oldB):Matrix<float> * Matrix<float>) (B:Matrix<float>) ->
+                            let (newPi, newA, newB) = 
+                                List.fold(fun ((oldPi, oldA, oldB):float list * Matrix<float> * Matrix<float>) (B:Matrix<float>) ->
 
                                    (* 
                                     Console.WriteLine("oldA {0}{1}", Environment.NewLine, oldA)
@@ -383,7 +486,29 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
                                                 
                                                 ) (0.0, 0.0) [0..T-1]
                                         |> (fun (d1, d2) -> (p*d1, p*d2 ) )
-                                        
+                                    
+                                                                (*
+                                    restimating \bar{\pi}
+
+                                    expected frequency in state i at time 1
+                                    $$
+                                    \bar{pi_i} = \gamma_1 (i)
+                                    $$
+                                    *)
+                                    let piNew (lpi:float list) (lA:Matrix<float>) (lB:Matrix<float>)  =
+                                        let alphaM = alpha'   
+                                        let betaM = beta' 
+                               
+                                        List.map (fun i -> 
+                                                     let denom = List.map (fun j ->
+                                                                             alphaM.[0, j]*betaM.[0, j]) [0..(alphaM.ColumnCount - 1)]
+                                                                    |> List.sum 
+                                                     let num = alphaM.[0, i] * betaM.[0,i]
+                                                     let g = num / denom
+                                                     g) [0..(alphaM.ColumnCount-1)]
+                                   
+                                    let newPi = piNew oldPi oldA oldB
+
                                     // now fold over time t to calculate the numerators
                                     // this is the probability in the sequence V (the range) from 0 to T-1
                                     let newA =
@@ -429,9 +554,9 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
                                                         newB1) newB [0..(B.ColumnCount-1)]
                                              ) Bjoint [0..(B.RowCount-1)]
 
-                                    (newA.NormalizeRows(1.0), newB.NormalizeRows(1.0))) (oldA, oldB) Bk
+                                    (newPi, newA.NormalizeRows(1.0), newB.NormalizeRows(1.0))) (oldPi, oldA, oldB) Bk
            
-                            (newA, newB)) (matA, matB) trainSequences
+                            (newPi, newA, newB)) (matPi, matA, matB) trainSequences
                 // determine if deltas between oldA and oldB differ below threshold theta
                 let normA = newA.NormalizeRows(1.0)
                 let normB = newB.NormalizeRows(1.0)
@@ -446,11 +571,11 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
                           | _ -> absB
                 // recurse if the changes are not small enough (not converging)
                 match (max <= theta) with
-                | true ->  (epoch, max, normA, normB)
-                | _ -> innerTrain (epoch+1) max (normA, normB)
+                | true ->  (epoch, max, newPi, normA, normB)
+                | _ -> innerTrain (epoch+1) max (newPi, normA, normB)
         // train sequences
-        let (epoch, error, newA, newB) = innerTrain 1 0.0 (matA, matB)
-        { pi = input.pi; 
+        let (epoch, error, newPi, newA, newB) = innerTrain 1 0.0 (pi, matA, matB)
+        { pi = newPi; 
           A = newA; 
           B = newB; 
           states = input.states; 
