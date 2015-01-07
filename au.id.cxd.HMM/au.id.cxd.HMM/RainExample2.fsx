@@ -79,6 +79,9 @@ let model = HiddenMarkovModel.train inputModel data 0.0001 10
 
 let predict = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
 
+let testpredict = HiddenMarkovModel.viterbiPredict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
+
+
 let predict2 = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella";]
 
 

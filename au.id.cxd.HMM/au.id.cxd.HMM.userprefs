@@ -1,14 +1,15 @@
 ﻿<Properties StartupItem="au.id.cxd.HMMTestConsole/au.id.cxd.HMMTestConsole.fsproj" GitUserInfo="UsingMD">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="au.id.cxd.HMM/CtiTest.fsx">
+  <MonoDevelop.Ide.Workbench>
     <Files>
-      <File FileName="au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" Line="62" Column="62" />
-      <File FileName="au.id.cxd.HMM/Data/Estimation.fs" Line="23" Column="23" />
-      <File FileName="au.id.cxd.HMM/RainExample3.fsx" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/Data/Estimation.fs" Line="36" Column="36" />
       <File FileName="au.id.cxd.HMMTestConsole/Program.fs" Line="1" Column="1" />
-      <File FileName="au.id.cxd.HMMTestConsole/TestRain2.fs" Line="1" Column="1" />
-      <File FileName="au.id.cxd.HMM/RainExample2.fsx" Line="1" Column="1" />
       <File FileName="au.id.cxd.HMM/CtiTest.fsx" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/Model/MatrixHiddenMarkovModel.fs" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/RainExample4.fsx" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/Model/HiddenMarkovModel.fs" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/RainExample3.fsx" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

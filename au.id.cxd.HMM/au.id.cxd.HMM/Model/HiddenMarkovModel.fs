@@ -359,6 +359,89 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
                     { prob = max; state = model.states.[index]; evidence = model.evidence.[t]; t = t; success = flag; } 
                     ) [1..((List.length V)-1)]
 
+    
+    (*
+    use the viterbi algortihm to determine the most likeli state sequence 
+    for the evidence sequence
+    *)
+    let viterbiPredict (model:Model) (evidenceSequence:string list) =
+        (* locally scoped cache *)
+        let map = new Dictionary<int, Matrix<float>>()
+        let cache i methodFn = 
+            match map.ContainsKey(i) with
+            | true -> map.[i]
+            | false -> 
+                map.Add(i, methodFn())
+                map.[i]
+
+        let pi = model.pi
+        let A = model.A
+        let B = model.B
+        let V = indices model.evidence evidenceSequence 
+
+        let maxState j (states:(int * int * int * (int * float) list) list) =
+            let (vi, vn, prevSt, stateP) = List.nth states j
+            List.fold(fun (max, (n, prob)) (si, p) ->
+                            match p > max with
+                            | true -> (p, (si, p))
+                            | false -> (max, (n, prob))
+                    ) (Double.MinValue, (-1, 0.0)) stateP
+        
+        let maxFor (states:(int * float) list) =
+            List.fold(fun (max, (n, prob)) (n, p) ->
+                            match p > max with
+                            | true -> (p, (n, p))
+                            | false -> (max, (n, prob))
+                    ) (Double.MinValue, (-1, 0.0)) states
+
+        // initialise set of vectors
+        let lattice =
+            List.mapi (fun j index ->
+                        let stateP =
+                                List.mapi (fun i s -> (i, pi.[i])) model.states  
+                        (j, index, -1, stateP)) V
+        
+        let replace (j, index, prevSt, stateP) lattice =
+            List.map (fun (j1, index1, prevSt1, state2) ->
+                            match j1 = j with
+                            | true -> (j, index, prevSt, stateP)
+                            | false -> (j1, index1, prevSt1, state2)) lattice
+
+        // build the new probabilities
+        let (T, newStates) = 
+            List.fold (fun (j, lattice) index ->
+                        let v = V.[index]
+                        let (max, (n, prob)) = maxState (index-1) lattice 
+                        let stateP =
+                            List.mapi (fun i s ->
+                                Console.WriteLine("v {0} i {1} n {2}", v, i, n)  
+                                (i, prob * B.[v,i] * A.[n, i])
+                                ) model.states
+                        let next = replace (j, v, n, stateP) lattice
+                        (j+1, next)) (0, lattice) [1..(List.length V - 1)] 
+        // now we have the new probabilities
+        // work backwards over the maximum for each of the new states and accumulate the state sequences
+        let (prev, readStates) = 
+            List.fold (fun (prev, accum) ((t, vindex, prevState, states):(int * int * int * (int * float) list)) ->
+                        Console.WriteLine("Prev: {0}", prev.ToString())
+                        let (si, prob) = 
+                            match List.length accum with
+                            | 0 ->  
+                                let (max, (si, prob)) = maxFor states
+                                (si, prob)
+                            | _ -> states.[prev]
+                        Console.WriteLine("SI: {0}", si.ToString())
+                        // map the pairs to a set of states
+                        let predict = { prob = prob; 
+                                        state = model.states.[si]; 
+                                        evidence = model.evidence.[t]; 
+                                        t = t; 
+                                        success = true; }
+                        (prevState, predict::accum)
+                     ) (-1, []) (newStates |> List.rev)
+        readStates
+
+
     (* 
     the training method makes use of the forward backward
     algorithm.
