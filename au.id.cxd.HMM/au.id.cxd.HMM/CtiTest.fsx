@@ -61,18 +61,15 @@ let evidenceCount = List.length evidenceVars
 // theta = 0.05
 // max epochs = 10
 
-let model = HiddenMarkovModel.train inputModel data 0.00001 3
-
-let test4 = ["Ringing(inbound)";]
-let pred2 = HiddenMarkovModel.predict model test4
+let model = HiddenMarkovModel.train inputModel data 0.00001 10
 
 let test5 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Held";"Dialing(Consult)"];
-HiddenMarkovModel.predict model test5
+HiddenMarkovModel.viterbiPredict model test5
 
 let test6 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Held";];
-HiddenMarkovModel.predict model test6
+HiddenMarkovModel.viterbiPredict model test6
 
 let test7 = ["Ringing(inbound)";"UserEvent(Start)";"UserEvent(Stop)";"OffHook";"Established";"Held";"Released";];
-HiddenMarkovModel.predict model test7
+HiddenMarkovModel.viterbiPredict model test7
      
 

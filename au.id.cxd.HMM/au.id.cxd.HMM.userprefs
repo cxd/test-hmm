@@ -1,23 +1,19 @@
 ﻿<Properties StartupItem="au.id.cxd.HMMTestConsole/au.id.cxd.HMMTestConsole.fsproj" GitUserInfo="UsingMD">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench ActiveDocument="au.id.cxd.HMM/RainExample2.fsx">
     <Files>
-      <File FileName="au.id.cxd.HMM/Data/Estimation.fs" Line="36" Column="36" />
-      <File FileName="au.id.cxd.HMMTestConsole/Program.fs" Line="1" Column="1" />
-      <File FileName="au.id.cxd.HMM/CtiTest.fsx" Line="1" Column="1" />
-      <File FileName="au.id.cxd.HMM/Model/MatrixHiddenMarkovModel.fs" Line="1" Column="1" />
-      <File FileName="au.id.cxd.HMM/RainExample4.fsx" Line="1" Column="1" />
-      <File FileName="au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" Line="1" Column="1" />
       <File FileName="au.id.cxd.HMM/Model/HiddenMarkovModel.fs" Line="1" Column="1" />
-      <File FileName="au.id.cxd.HMM/RainExample3.fsx" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/RainExample2.fsx" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMMTestConsole/TestRain.fs" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMMTestConsole/Program.fs" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMMTestConsole/TestRain2.fs" Line="1" Column="1" />
+      <File FileName="au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/TestCti.fs" line="81" column="1" />
-      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/Program.fs" line="19" column="11" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/TestRain2.fs" line="78" column="1" />
-      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/Program.fs" line="16" column="22" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="448" column="1" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="569" column="1" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="575" column="1" />
@@ -25,13 +21,16 @@
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/TestRain2.fs" line="83" column="1" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="452" column="1" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="525" column="1" />
-      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="555" column="37" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="526" column="1" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="319" column="1" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="262" column="1" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="260" column="1" />
       <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="274" column="18" />
-      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/MultiHiddenMarkovModel.fs" line="551" column="1" />
+      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/HiddenMarkovModel.fs" line="430" column="67" />
+      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMMTestConsole/TestRain.fs" line="60" column="9" />
+      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/HiddenMarkovModel.fs" line="426" column="24" />
+      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/HiddenMarkovModel.fs" line="383" column="52" />
+      <Breakpoint file="/Users/cd/Google Drive/Math/Markov Model/au.id.cxd.HMM/au.id.cxd.HMM/Model/HiddenMarkovModel.fs" line="435" column="1" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />

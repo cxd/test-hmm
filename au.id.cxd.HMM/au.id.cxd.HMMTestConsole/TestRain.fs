@@ -55,4 +55,8 @@ module TestRain =
             } 
 
         let model = HiddenMarkovModel.train inputModel endSequences 0.0005 10
+
+
+        let testpredict = HiddenMarkovModel.viterbiPredict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
+
         ()

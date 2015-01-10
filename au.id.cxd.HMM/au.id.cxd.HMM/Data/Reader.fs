@@ -33,7 +33,7 @@ module Reader =
         let lines = readLines file
         List.fold (
             fun (accum:string list list) (line:string) -> 
-                match line.Trim().StartsWith("#") with
+                match (line.Trim().StartsWith("#")) || (String.IsNullOrEmpty(line)) with
                 | true -> accum
                 | _ -> ( (line.Trim().Split([|','|]) |> Array.toList) |> List.map(fun item -> item.Trim()) ) :: accum) [] lines
  

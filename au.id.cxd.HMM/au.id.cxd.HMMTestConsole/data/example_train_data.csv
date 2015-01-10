@@ -6,7 +6,8 @@
 Ringing(inbound),OnCall
 Ringing(inbound),AttachedDataChanged,OffHook,OnCall
 Ringing(inbound),AttachedDataChanged,OffHook,Established,OnCall
-#Ringing(inbound),UserEvent(Start),UserEvent(Stop),AttachedDataChanged,OffHook,Established,OnCall
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),AttachedDataChanged,OffHook,Established,OnCall
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),AttachedDataChanged,AttachedDataChanged,OffHook,Established,OnCall
 #
 # audio started events
 #
@@ -14,12 +15,14 @@ Ringing(inbound),UserEvent(Start),Started
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),Paused
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),Started
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),UserEvent(Stop),Paused
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,Retrieved,UserEvent(Start),Started
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,Retrieved,UserEvent(Start),UserEvent(Stop),Paused
+Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,Retrieved,UserEvent(Start),UserEvent(Stop),UserEvent(Start),Started
 #
 # Held sequences
 #
 Ringing(inbound),OffHook,Established,Held,OnHold
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,OnHold
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),UserEvent(Start),OffHook,Established,Held,OnHold
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,OnHold
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachedDataChanged,Held,OnHold
 Ringing(inbound),Held,OnHold
@@ -27,7 +30,6 @@ Ringing(inbound),Held,OnHold
 # Consult sequences
 #
 Ringing(inbound),OffHook,Established,Held,Dialing(Consult),Consult
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,UserEvent(Stop),Dialing(Consult),Consult
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,UserEvent(Stop),Dialing(Consult),Consult
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,Dialing(Consult),Consult
 Ringing(inbound),Dialing(Consult),Consult
@@ -35,8 +37,6 @@ Ringing(inbound),OffHook,Established,Dialing(Consult),Consult
 #
 # End sequences
 #
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Held,UserEvent(Stop),Dialing(Consult),UserEvent(Stop),UserEvent(Start),Released,Ended
-Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,AttachDataChanged,Released,Ended
 Ringing(inbound),Released,Ended
 Ringing(inbound),OffHook,Established,Held,Released,Ended
 Ringing(inbound),UserEvent(Start),UserEvent(Stop),OffHook,Established,Held,Released,Ended

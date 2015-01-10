@@ -22,10 +22,11 @@ let data =
      ["noumbrella"; "noumbrella"; "noumbrella"; "dry"];
      ["noumbrella"; "umbrella"; "noumbrella"; "dry"];
      ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "dry"];
-
+     ["noumbrella"; "noumbrella"; "noumbrella"; "dry"];
+     
 
      ["noumbrella"; "umbrella"; "rain"];
-     ["noumbrella"; "umbrella"; "noumbrella"; "rain"];
+     ["noumbrella"; "umbrella"; "noumbrella"; "dry"];
      ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "dry"];
      ["noumbrella"; "umbrella"; "noumbrella"; "noumbrella"; "umbrella"; "rain"];
      ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "rain"];
@@ -35,16 +36,13 @@ let data =
      ["umbrella"; "umbrella"; "umbrella"; "rain"];
     
 
-     ["absent"; "storm"];
+     ["noumbrella"; "absent"; "storm"];
      ["umbrella"; "absent"; "storm"];
      ["absent"; "absent"; "absent"; "storm"];
     
-     ["noumbrella"; "absent"; "storm"];
      ["noumbrella"; "absent"; "umbrella"; "rain"];
      ["noumbrella"; "absent"; "umbrella"; "absent"; "storm"];
      ["noumbrella"; "absent"; "absent"; "absent"; "umbrella"; "rain"];
-     ["noumbrella"; "umbrella"; "absent"; "absent"; "storm"];
-     ["noumbrella"; "absent"; "absent"; "absent"; "storm"];
      ["absent"; "absent"; "absent"; "absent"; "storm"];
  
 
@@ -74,23 +72,26 @@ let inputModel = {
     } 
 
 
-let model = HiddenMarkovModel.train inputModel data 0.0001 10
+let model = HiddenMarkovModel.train inputModel data 0.0001 20
 
 
 let predict = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
 
-let testpredict = HiddenMarkovModel.viterbiPredict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
+let  testpredict = HiddenMarkovModel.viterbiPredict model ["noumbrella"; "umbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella";]
 
 
 let predict2 = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella";]
 
 
-let predict3 = HiddenMarkovModel.predict model ["umbrella"; "absent"; "absent"]
+let predict3 = HiddenMarkovModel.viterbiPredict model ["umbrella"; "absent"; "absent"]
 
 
-let predict4 = HiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; "absent";]
+let predict4 = HiddenMarkovModel.viterbiPredict model ["noumbrella"; "noumbrella"; "absent";]
 
 let predict5 = HiddenMarkovModel.predict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella"; "absent";]
+
+let testpredict5 = HiddenMarkovModel.viterbiPredict model ["noumbrella"; "umbrella"; "noumbrella"; "umbrella"; "umbrella"; "umbrella"; "umbrella"; "absent";]
+
 
 
 let predict6 = HiddenMarkovModel.predict model ["noumbrella"; "noumbrella"; "noumbrella"; "noumbrella"]

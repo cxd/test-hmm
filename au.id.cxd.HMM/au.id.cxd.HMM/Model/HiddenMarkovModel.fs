@@ -363,6 +363,7 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
     (*
     use the viterbi algortihm to determine the most likeli state sequence 
     for the evidence sequence
+    based on pseudo code from: http://en.wikipedia.org/wiki/Viterbi_algorithm
     *)
     let viterbiPredict (model:Model) (evidenceSequence:string list) =
         (* locally scoped cache *)
@@ -377,70 +378,53 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
         let pi = model.pi
         let A = model.A
         let B = model.B
-        let V = indices model.evidence evidenceSequence 
+        let V = indices model.evidence evidenceSequence
+        let K = List.length model.states
+        let T = List.length V
+        let T1 = DenseMatrix.create K T 0.0
+        let T2 = DenseMatrix.create K T 0.0
+        // initialisation
+        let T1' =
+            List.fold(fun (t1:Matrix<float>) i ->
+                        let j = V.[0]
+                        t1.[i,0] <- pi.[i]*B.[j,i]
+                        t1) T1 [0..(K-1)]
+        // calculate scores for time T
+        let (t1, t2) =
+            List.fold(fun (t1, t2) t ->
+                List.fold(fun ((t1, t2):Matrix<float>*Matrix<float>) j ->
+                        let v = V.[t]
+                        let args = DenseVector.init K (fun k ->
+                                    t1.[k, t-1] * A.[k,j] * B.[v, j])
+                        let max = args.Maximum()
+                        let argmax = args.MaximumIndex()
+                        t1.[j, t] <- max
+                        t2.[j, t] <- Convert.ToDouble(argmax)
+                        (t1,t2)) (t1, t2) [0..(K-1)]
+                    ) (T1', T2) [1..(T-1)]
+        // back track from T.. T-1
+        let lastT = t1.Column(T-1)
+        let argmax = lastT.MaximumIndex()
+        let max = lastT.Maximum()
+        let Z = DenseVector.create T 0.0
+        let S = DenseVector.create T 0.0
 
-        let maxState j (states:(int * int * int * (int * float) list) list) =
-            let (vi, vn, prevSt, stateP) = List.nth states j
-            List.fold(fun (max, (n, prob)) (si, p) ->
-                            match p > max with
-                            | true -> (p, (si, p))
-                            | false -> (max, (n, prob))
-                    ) (Double.MinValue, (-1, 0.0)) stateP
-        
-        let maxFor (states:(int * float) list) =
-            List.fold(fun (max, (n, prob)) (n, p) ->
-                            match p > max with
-                            | true -> (p, (n, p))
-                            | false -> (max, (n, prob))
-                    ) (Double.MinValue, (-1, 0.0)) states
-
-        // initialise set of vectors
-        let lattice =
-            List.mapi (fun j index ->
-                        let stateP =
-                                List.mapi (fun i s -> (i, pi.[i])) model.states  
-                        (j, index, -1, stateP)) V
-        
-        let replace (j, index, prevSt, stateP) lattice =
-            List.map (fun (j1, index1, prevSt1, state2) ->
-                            match j1 = j with
-                            | true -> (j, index, prevSt, stateP)
-                            | false -> (j1, index1, prevSt1, state2)) lattice
-
-        // build the new probabilities
-        let (T, newStates) = 
-            List.fold (fun (j, lattice) index ->
-                        let v = V.[index]
-                        let (max, (n, prob)) = maxState (index-1) lattice 
-                        let stateP =
-                            List.mapi (fun i s ->
-                                Console.WriteLine("v {0} i {1} n {2}", v, i, n)  
-                                (i, prob * B.[v,i] * A.[n, i])
-                                ) model.states
-                        let next = replace (j, v, n, stateP) lattice
-                        (j+1, next)) (0, lattice) [1..(List.length V - 1)] 
-        // now we have the new probabilities
-        // work backwards over the maximum for each of the new states and accumulate the state sequences
-        let (prev, readStates) = 
-            List.fold (fun (prev, accum) ((t, vindex, prevState, states):(int * int * int * (int * float) list)) ->
-                        Console.WriteLine("Prev: {0}", prev.ToString())
-                        let (si, prob) = 
-                            match List.length accum with
-                            | 0 ->  
-                                let (max, (si, prob)) = maxFor states
-                                (si, prob)
-                            | _ -> states.[prev]
-                        Console.WriteLine("SI: {0}", si.ToString())
-                        // map the pairs to a set of states
-                        let predict = { prob = prob; 
-                                        state = model.states.[si]; 
-                                        evidence = model.evidence.[t]; 
-                                        t = t; 
-                                        success = true; }
-                        (prevState, predict::accum)
-                     ) (-1, []) (newStates |> List.rev)
-        readStates
-
+        Z.[T-1] <- Convert.ToDouble(argmax)
+        S.[T-1] <- max
+        let sT = model.states.[argmax]
+        let v = V.[T-1]
+        let accum  = [ { prob = max; state = sT; evidence = model.evidence.[v]; t = T; success = true; }  ]
+        // accumulate
+        List.fold (fun accum i ->
+                    let index = Convert.ToInt32(Z.[i])
+                    Z.[i-1] <- t2.[index, i]
+                    S.[i-1] <- S.[i]
+                    let stIndex = Convert.ToInt32(Z.[i-1])
+                    let sT = model.states.[stIndex]
+                    let v = V.[i-1]
+                    let predict = { prob = t1.[index, i]; state = sT; evidence = model.evidence.[v]; t = i; success = true }
+                    predict :: accum
+                    ) accum ([1..(T-1)] |> List.rev)
 
     (* 
     the training method makes use of the forward backward
@@ -658,7 +642,7 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
                 | _ -> innerTrain (epoch+1) max (newPi, normA, normB)
         // train sequences
         let (epoch, error, newPi, newA, newB) = innerTrain 1 0.0 (pi, matA, matB)
-        { pi = newPi; 
+        { pi = pi; 
           A = newA; 
           B = newB; 
           states = input.states; 

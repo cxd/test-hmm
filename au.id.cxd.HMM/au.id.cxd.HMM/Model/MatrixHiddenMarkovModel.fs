@@ -232,6 +232,7 @@ argmax_{1 \le i \le N}[\gamma_i(t)], & 1 \le t \le T.
                     ) [0..((List.length V)-1)]
 
 
+
     (* 
     the training method makes use of the forward backward
     algorithm.
